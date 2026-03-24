@@ -1,4 +1,5 @@
-import SeedArchive from './pages/SeedArchive'
+import Home from './pages/Home'
+
 export default function App() {
-  return <SeedArchive />
+  return <Home />
 }

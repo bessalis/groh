@@ -63,7 +63,7 @@ export default function AddSeed({ dark, onBack, onSaved }) {
     if (!name.trim()) { setError('Namn kravs'); return }
     setSaving(true)
     const { error: err } = await supabase.from('seeds').insert({
-      user_id: '00000000-0000-0000-0000-000000000001',
+      user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       name: name.trim(),
       species: species.trim() || null,
       notes: notes.trim() || null,

@@ -11,6 +11,8 @@ export default function AddSeed({ dark, onBack, onSaved }) {
   const [pretreatmentNote, setPretreatmentNote] = useState('')
   const [highMaintenance, setHighMaintenance] = useState(false)
   const [thumb, setThumb] = useState(null)
+  const [sownDate, setSownDate] = useState('')
+  const [sowingType, setSowingType] = useState('indoor')
   const [saving, setSaving] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
@@ -68,6 +70,7 @@ export default function AddSeed({ dark, onBack, onSaved }) {
       species: species.trim() || null,
       notes: notes.trim() || null,
       companion_planting: companion.trim() || null,
+      sown_date: sownDate || null,
       frost_sensitive: frostSensitive,
       requires_pretreatment: pretreatment,
       pretreatment_notes: pretreatmentNote || null,
@@ -163,6 +166,31 @@ export default function AddSeed({ dark, onBack, onSaved }) {
           </div>
           <div onClick={() => setThumb(thumb === 'down' ? null : 'down')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'down' ? '#7A2020' : border), background: thumb === 'down' ? (dark ? '#301010' : '#FFF0F0') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: thumb === 'down' ? '#E28080' : muted }}>
             ↓ Tank efter
+          </div>
+        </div>
+
+        <div style={{ height: '0.5px', background: border, margin: '0 0 20px' }} />
+        <p style={sectionLabel}>SADD</p>
+
+        <div style={{ marginBottom: '8px' }}>
+          <p style={{ fontSize: '12px', color: text, margin: '0 0 5px' }}>Saddat datum</p>
+          <input
+            type="date"
+            value={sownDate}
+            onChange={e => setSownDate(e.target.value)}
+            style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <p style={{ fontSize: '12px', color: text, margin: '0 0 8px' }}>Typ av sadd</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div onClick={() => setSowingType('indoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'indoor' ? '#4E6E44' : border), background: sowingType === 'indoor' ? (dark ? '#1E3020' : '#E8EDE4') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: sowingType === 'indoor' ? muted : muted }}>
+              Fororodling
+            </div>
+            <div onClick={() => setSowingType('outdoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'outdoor' ? '#4E6E44' : border), background: sowingType === 'outdoor' ? (dark ? '#1E3020' : '#E8EDE4') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: sowingType === 'outdoor' ? muted : muted }}>
+              Direktsadd
+            </div>
           </div>
         </div>
 

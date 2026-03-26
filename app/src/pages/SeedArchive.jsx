@@ -1,6 +1,41 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
+const IMG_MAP = {
+  luktart: 'luktart', luktärt: 'luktart',
+  rosenskara: 'rosenskara', rosenskära: 'rosenskara',
+  aster: 'aster',
+  riddarsporre: 'riddarsporre',
+  lejongap: 'lejongap',
+  jungfruhirs: 'jungfruhirs',
+  brysselkal: 'brysselkal', brysselkål: 'brysselkal',
+  lavendel: 'lavendel',
+  vallmo: 'vallmo', sibirisk: 'vallmo',
+}
+
+function getPhase(sownDate) {
+  if (!sownDate) return 'growing'
+  const days = Math.floor((Date.now() - new Date(sownDate).getTime()) / 86400000)
+  if (days <= 7) return 'seed'
+  if (days <= 21) return 'seedling'
+  if (days <= 60) return 'growing'
+  return 'mature'
+}
+
+function SeedImage({ name, sownDate, dark }) {
+  const key = Object.keys(IMG_MAP).find(k => name.toLowerCase().includes(k))
+  const file = key ? IMG_MAP[key] : 'fallback'
+  const phase = getPhase(sownDate)
+  const src = new URL('../assets/' + file + '_' + phase + '.png', import.meta.url).href
+  const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
+  return (
+    <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
+      <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        onError={e => { if (e.target.src !== fallback) e.target.src = fallback }} />
+    </div>
+  )
+}
+
 export default function SeedArchive({ dark, onSelect, onAdd }) {
   const [seeds, setSeeds] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,30 +70,25 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
     s.name.toLowerCase().includes(search.toLowerCase())
   )
 
+  function phaseLabel(sownDate) {
+    if (!sownDate) return null
+    const days = Math.floor((Date.now() - new Date(sownDate).getTime()) / 86400000)
+    if (days <= 7) return 'Precis sått 🌱'
+    if (days <= 21) return 'Groddar nu 🌿'
+    if (days <= 60) return 'Växer fint 🌸'
+    return 'Mogen 🌺'
+  }
+
   function statusLabel(seed) {
     if (seed.thumb === 'down') return { label: 'Tänk efter', color: '#E24B4A' }
-    if (seed.sown_date) return { label: 'Sått ' + new Date(seed.sown_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }), color: '#7A9E6E' }
+    if (seed.sown_date) {
+      const phase = phaseLabel(seed.sown_date)
+      const date = new Date(seed.sown_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+      return { label: phase + ' · Sått ' + date, color: muted }
+    }
     if (seed.frost_sensitive) return { label: 'Frostkänslig', color: '#EF9F27' }
     if (seed.requires_pretreatment) return { label: 'Förbehandling', color: '#7F77DD' }
     return { label: 'Klar att så', color: muted }
-  }
-
-  const IMG_MAP = {
-    luktart: 'luktart', rosenskara: 'rosenskara', rosenskära: 'rosenskara',
-    aster: 'aster', riddarsporre: 'riddarsporre', lejongap: 'lejongap',
-    jungfruhirs: 'jungfruhirs', brysselkal: 'brysselkal', brysselkål: 'brysselkal',
-    lavendel: 'lavendel', vallmo: 'vallmo', sibirisk: 'vallmo',
-  }
-
-  function SeedImage({ name, dark }) {
-    const key = Object.keys(IMG_MAP).find(k => name.toLowerCase().includes(k))
-    const file = key ? IMG_MAP[key] : 'fallback'
-    const src = new URL('../assets/' + file + '_growing.png', import.meta.url).href
-    return (
-      <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
-        <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
-      </div>
-    )
   }
 
   function SwipeCard({ seed }) {
@@ -70,14 +100,12 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
       startX.current = e.touches[0].clientX
       if (swipedId && swipedId !== seed.id) setSwipedId(null)
     }
-
     function onTouchMove(e) {
       if (startX.current === null) return
       const diff = startX.current - e.touches[0].clientX
       if (diff > 0) setOffset(Math.min(diff, 120))
       else setOffset(0)
     }
-
     function onTouchEnd() {
       if (offset >= THRESHOLD) { setSwipedId(seed.id); setOffset(90) }
       else { setOffset(0); if (swipedId === seed.id) setSwipedId(null) }
@@ -100,7 +128,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
           style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
-          <SeedImage name={seed.name} dark={dark} />
+          <SeedImage name={seed.name} sownDate={seed.sown_date} dark={dark} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: 500, color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
             <p style={{ margin: '0 0 4px', fontSize: '12px', color: muted, fontStyle: 'italic' }}>{seed.species}</p>

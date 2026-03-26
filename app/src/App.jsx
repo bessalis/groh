@@ -1,10 +1,12 @@
 import AddSeed from './pages/AddSeed'
 import SeedDetail from './pages/SeedDetail'
 import Profile from './pages/Profile'
-import { useState } from 'react'
+import Login from './pages/Login'
+import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import SeedArchive from './pages/SeedArchive'
 import Calendar from './pages/Calendar'
+import { supabase } from './lib/supabase'
 import './styles/tokens.css'
 
 const NAV_ITEMS = [
@@ -19,6 +21,19 @@ export default function App() {
   const [dark, setDark] = useState(true)
   const [selectedSeed, setSelectedSeed] = useState(null)
   const [addingSeed, setAddingSeed] = useState(false)
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   const navBg = dark ? '#12130F' : '#F2F0E8'
   const navBorder = dark ? '#2A2E24' : '#E0DDD4'
@@ -31,25 +46,25 @@ export default function App() {
     setAddingSeed(false)
   }
 
-  function handleAdd() {
-    setPage('seeds')
-    setAddingSeed(true)
-    setSelectedSeed(null)
+  if (authLoading) {
+    return (
+      <div style={{ background: dark ? '#12130F' : '#F2F0E8', minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '24px', color: '#7A9E6E' }}>Groh!</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Login dark={dark} onLogin={() => setUser(true)} />
   }
 
   return (
     <div style={{ position: 'relative' }}>
-
-      <button onClick={() => setDark(!dark)} style={{
-        position: 'fixed', top: '16px', right: '16px', zIndex: 200,
-        width: '36px', height: '36px', borderRadius: '50%',
-        background: dark ? '#2A2E24' : '#E8E4DA',
-        border: 'none', cursor: 'pointer', fontSize: '15px'
-      }}>
+      <button onClick={() => setDark(!dark)} style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: dark ? '#2A2E24' : '#E8E4DA', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
         {dark ? '☀' : '☽'}
       </button>
 
-      {page === 'home' && <Home dark={dark} onAdd={handleAdd} />}
+      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive dark={dark} onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
@@ -60,15 +75,9 @@ export default function App() {
         <SeedDetail seed={selectedSeed} dark={dark} onBack={() => setSelectedSeed(null)} />
       )}
       {page === 'calendar' && <Calendar dark={dark} />}
-      {page === 'profile' && <Profile dark={dark} />}
+      {page === 'profile' && <Profile dark={dark} onLogout={() => supabase.auth.signOut()} />}
 
-      <nav style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '390px', background: navBg,
-        borderTop: '0.5px solid ' + navBorder,
-        display: 'flex', justifyContent: 'space-around',
-        padding: '10px 0 24px', zIndex: 100
-      }}>
+      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '390px', background: navBg, borderTop: '0.5px solid ' + navBorder, display: 'flex', justifyContent: 'space-around', padding: '10px 0 24px', zIndex: 100 }}>
         {NAV_ITEMS.map(item => {
           const active = page === item.id && !selectedSeed && !addingSeed
           return (

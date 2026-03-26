@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function AddSeed({ dark, onBack, onSaved }) {
@@ -14,6 +14,13 @@ export default function AddSeed({ dark, onBack, onSaved }) {
   const [sownDate, setSownDate] = useState('')
   const [sowingType, setSowingType] = useState('indoor')
   const [saving, setSaving] = useState(false)
+  const [userId, setUserId] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id)
+    })
+  }, [])
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
   const [error, setError] = useState('')
@@ -65,7 +72,7 @@ export default function AddSeed({ dark, onBack, onSaved }) {
     if (!name.trim()) { setError('Namn kravs'); return }
     setSaving(true)
     const { error: err } = await supabase.from('seeds').insert({
-      user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      user_id: userId,
       name: name.trim(),
       species: species.trim() || null,
       notes: notes.trim() || null,

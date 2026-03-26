@@ -43,6 +43,24 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
     return { label: 'Klar att så', color: muted }
   }
 
+  const IMG_MAP = {
+    luktart: 'luktart', rosenskara: 'rosenskara', rosenskära: 'rosenskara',
+    aster: 'aster', riddarsporre: 'riddarsporre', lejongap: 'lejongap',
+    jungfruhirs: 'jungfruhirs', brysselkal: 'brysselkal', brysselkål: 'brysselkal',
+    lavendel: 'lavendel', vallmo: 'vallmo', sibirisk: 'vallmo',
+  }
+
+  function SeedImage({ name, dark }) {
+    const key = Object.keys(IMG_MAP).find(k => name.toLowerCase().includes(k))
+    const file = key ? IMG_MAP[key] : 'fallback'
+    const src = new URL('../assets/' + file + '_seed.png', import.meta.url).href
+    return (
+      <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
+        <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
+      </div>
+    )
+  }
+
   function SwipeCard({ seed }) {
     const startX = useRef(null)
     const [offset, setOffset] = useState(0)
@@ -82,11 +100,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
           style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '10px', background: dark ? '#2A2E24' : '#E8E4DA', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill={muted}>
-              <path d="M17 8C8 10 5.9 16.17 3.82 19.54c-.06.09.15.1.22.02C6.27 17.26 9 13 17 8z"/>
-            </svg>
-          </div>
+          <SeedImage name={seed.name} dark={dark} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: 500, color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
             <p style={{ margin: '0 0 4px', fontSize: '12px', color: muted, fontStyle: 'italic' }}>{seed.species}</p>

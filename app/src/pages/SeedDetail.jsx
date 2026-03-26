@@ -21,11 +21,18 @@ const CARE_DATA = {
 }
 
 const PHASE_IMAGES = {
-  blasrisp: 'blasrisp', blarisp: 'blasrisp', luktart: 'luktart',
-  lejonap: 'lejongap', sommarflox: 'sommarflox', riddarsporre: 'riddarsporre',
-  jungfruhirs: 'jungfruhirs', tagetes: 'tagetes', amarant: 'amarant',
-  aster: 'aster', rosenskara: 'rosenskara', vallmo: 'vallmo',
-  lavendel: 'lavendel', brysselkal: 'brysselkal',
+  luktart: 'luktart',
+  rosenskara: 'rosenskara',
+  rosenskära: 'rosenskara',
+  aster: 'aster',
+  riddarsporre: 'riddarsporre',
+  lejongap: 'lejongap',
+  jungfruhirs: 'jungfruhirs',
+  brysselkal: 'brysselkal',
+  brysselkål: 'brysselkal',
+  lavendel: 'lavendel',
+  vallmo: 'vallmo',
+  sibirisk: 'vallmo',
 }
 
 export default function SeedDetail({ seed, dark, onBack }) {

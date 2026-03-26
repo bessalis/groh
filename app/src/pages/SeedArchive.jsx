@@ -53,7 +53,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
   function SeedImage({ name, dark }) {
     const key = Object.keys(IMG_MAP).find(k => name.toLowerCase().includes(k))
     const file = key ? IMG_MAP[key] : 'fallback'
-    const src = new URL('../assets/' + file + '_seed.png', import.meta.url).href
+    const src = new URL('../assets/' + file + '_growing.png', import.meta.url).href
     return (
       <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
         <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />

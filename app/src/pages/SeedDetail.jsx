@@ -181,7 +181,7 @@ export default function SeedDetail({ seed, dark, onBack }) {
         )}
       </div>
 
-      <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', width: '358px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', marginBottom: '32px' }}>
         <button onClick={handleArchive} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
           Arkivera frö
         </button>

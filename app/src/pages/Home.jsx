@@ -1,10 +1,6 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 import illustration from '../assets/luktart_growing.png'
-
-const todos = [
-  { action: 'Vattna', plant: 'Lejonap Bronze', when: 'Sa snart som mojligt' },
-  { action: 'Toppa', plant: 'Luktart', when: 'Sa snart som mojligt' },
-  { action: 'Planera', plant: 'Sadd av blarisp', when: '3 dagar sedan' },
-]
 
 const shortcuts = [
   { icon: '+', label: 'Lagg till', action: 'add' },
@@ -13,6 +9,9 @@ const shortcuts = [
 ]
 
 export default function Home({ dark, onAdd }) {
+  const [seedCount, setSeedCount] = useState(0)
+  const [recentSeeds, setRecentSeeds] = useState([])
+
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kvall'
   const bg = dark ? '#12130F' : '#F2F0E8'
@@ -22,13 +21,30 @@ export default function Home({ dark, onAdd }) {
   const borderColor = dark ? '#2A2E24' : '#E8E4DA'
   const gradientStop = dark ? '#12130F' : '#F2F0E8'
 
+  useEffect(() => {
+    supabase.from('seeds').select('id, name, sown_date', { count: 'exact' })
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .then(({ data, count }) => {
+        setSeedCount(count || 0)
+        setRecentSeeds(data || [])
+      })
+  }, [])
+
+  function plantText(count) {
+    if (count === 0) return 'Inga fron annu - lagg till ditt forsta!'
+    if (count === 1) return '1 fro i din samling'
+    return count + ' fron vaxter fint'
+  }
+
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '80px', position: 'relative' }}>
 
       <div style={{ textAlign: 'center', padding: '48px 16px 16px' }}>
         <p style={{ fontSize: '13px', color: muted, margin: '0 0 4px' }}>{greeting}</p>
         <h1 style={{ fontSize: '28px', fontFamily: 'Georgia, serif', fontWeight: 400, margin: '0 0 6px', color: text }}>Din tradgard</h1>
-        <p style={{ fontSize: '14px', color: muted, margin: 0 }}>3 plantor vaxter fint</p>
+        <p style={{ fontSize: '14px', color: muted, margin: 0 }}>{plantText(seedCount)}</p>
       </div>
 
       <div style={{ margin: '0 16px', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
@@ -46,20 +62,26 @@ export default function Home({ dark, onAdd }) {
         </div>
       </div>
 
-      <div style={{ padding: '24px 16px 0' }}>
-        <h2 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, marginBottom: '12px', color: text }}>Att gora</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {todos.map((todo, i) => (
-            <div key={i} style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7A9E6E', flexShrink: 0 }} />
-              <div>
-                <p style={{ margin: 0, fontSize: '14px', color: muted }}>{todo.action} <strong style={{ color: text }}>{todo.plant}</strong></p>
-                <p style={{ margin: 0, fontSize: '12px', color: muted }}>{todo.when}</p>
+      {recentSeeds.length > 0 && (
+        <div style={{ padding: '24px 16px 0' }}>
+          <h2 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, marginBottom: '12px', color: text }}>Senast tillagda</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {recentSeeds.map((seed, i) => (
+              <div key={i} style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: seed.sown_date ? '#7A9E6E' : borderColor, flexShrink: 0 }} />
+                <div>
+                  <p style={{ margin: 0, fontSize: '14px', color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
+                  {seed.sown_date && (
+                    <p style={{ margin: 0, fontSize: '11px', color: muted }}>
+                      Satt {new Date(seed.sown_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

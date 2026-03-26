@@ -56,11 +56,7 @@ export default function SeedDetail({ seed, dark, onBack }) {
   const care = CARE_DATA[seed.species] || { water: '-', light: '-', temp: '-' }
 
   async function handlePhaseChange(phaseId) {
-    // Tillåt bara framåt, eller till manuellt valda faser (growing/mature)
-    const phaseOrder = ['seed', 'seedling', 'growing', 'mature']
-    const current = phaseOrder.indexOf(currentPhase)
-    const next = phaseOrder.indexOf(phaseId)
-    if (next < current) return // Kan inte gå bakåt
+    if (phaseId === currentPhase) return
     setSavingPhase(true)
     setCurrentPhase(phaseId)
     await supabase.from('seeds').update({ current_phase: phaseId }).eq('id', seed.id)
@@ -71,8 +67,10 @@ export default function SeedDetail({ seed, dark, onBack }) {
     const nameLower = seed.name.toLowerCase()
     const key = Object.keys(IMG_MAP).find(k => nameLower.includes(k))
     const file = key ? IMG_MAP[key] : 'fallback'
-    try { return new URL('../assets/' + file + '_' + currentPhase + '.png', import.meta.url).href }
-    catch { return new URL('../assets/fallback_growing.png', import.meta.url).href }
+    const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
+    try {
+      return new URL('../assets/' + file + '_' + currentPhase + '.png', import.meta.url).href
+    } catch { return fallback }
   }
 
   async function handleDelete() {
@@ -85,13 +83,8 @@ export default function SeedDetail({ seed, dark, onBack }) {
     onBack && onBack()
   }
 
-  const isAutoPhase = (phaseId) => {
-    const auto = autoPhase(seed.sown_date)
-    return phaseId === auto && !seed.current_phase
-  }
-
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '180px' }}>
+    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '160px' }}>
 
       <div style={{ position: 'relative' }}>
         <div style={{ height: '260px', background: dark ? '#1A1C17' : '#E8EDE4', overflow: 'hidden' }}>
@@ -127,30 +120,26 @@ export default function SeedDetail({ seed, dark, onBack }) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
             <div style={{ position: 'absolute', top: '18px', left: '10%', right: '10%', height: '2px', background: borderColor }} />
-            {PHASES.map((phase, i) => {
-              const phaseOrder = ['seed', 'seedling', 'growing', 'mature']
+            {PHASES.map((phase) => {
               const active = phase.id === currentPhase
-              const passed = phaseOrder.indexOf(currentPhase) > i
-              const isAuto = isAutoPhase(phase.id)
-              const canClick = phaseOrder.indexOf(phase.id) > phaseOrder.indexOf(currentPhase)
+              const phaseOrder = ['seed', 'seedling', 'growing', 'mature']
+              const passed = phaseOrder.indexOf(currentPhase) > phaseOrder.indexOf(phase.id)
               return (
                 <div key={phase.id}
-                  onClick={() => canClick && handlePhaseChange(phase.id)}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1, cursor: canClick ? 'pointer' : 'default' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: active ? '#4E6E44' : passed ? '#2A3828' : (dark ? '#1A1C17' : '#F0EDE6'), border: '2px solid ' + (active ? '#7A9E6E' : canClick ? '#4A5244' : borderColor), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? '#F2F0E8' : canClick ? '#4A5244' : muted}>
+                  onClick={() => handlePhaseChange(phase.id)}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1, cursor: 'pointer' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: active ? '#4E6E44' : passed ? '#2A3828' : (dark ? '#1A1C17' : '#F0EDE6'), border: '2px solid ' + (active ? '#7A9E6E' : passed ? '#3B5E35' : borderColor), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? '#F2F0E8' : passed ? '#7A9E6E' : muted}>
                       <path d={phase.icon}/>
                     </svg>
                   </div>
-                  <span style={{ fontSize: '10px', color: active ? muted : canClick ? '#4A5244' : borderColor }}>
-                    {phase.label}{isAuto ? ' ✦' : ''}
-                  </span>
+                  <span style={{ fontSize: '10px', color: active ? muted : passed ? '#4A5244' : borderColor }}>{phase.label}</span>
                 </div>
               )
             })}
           </div>
           <p style={{ fontSize: '10px', color: borderColor, margin: '12px 0 0', textAlign: 'center' }}>
-            Tryck på nästa fas för att flytta framåt · ✦ = automatisk
+            Tryck på en fas för att uppdatera
           </p>
         </div>
 
@@ -193,10 +182,7 @@ export default function SeedDetail({ seed, dark, onBack }) {
       </div>
 
       <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', width: '358px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button style={{ width: '100%', padding: '14px', background: '#4E6E44', border: 'none', borderRadius: '12px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
-          Logga tillväxt
-        </button>
-        <button onClick={handleArchive} style={{ width: '100%', padding: '12px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
+        <button onClick={handleArchive} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
           Arkivera frö
         </button>
         {!confirmDelete ? (

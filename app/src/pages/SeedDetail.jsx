@@ -9,6 +9,8 @@ import IconTemp from '../assets/temperature.svg?react'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const images = import.meta.glob('../assets/*.png', { eager: true })
+
 const NEXT_STEP = {
   seed: 'Håll jorden fuktig och varm. Grodden brukar visa sig inom 1-3 veckor.',
   seedling: 'Låt grodden växa sig stark. Plantera om när den har 2-3 riktiga blad.',
@@ -104,14 +106,12 @@ function getImage() {
   const nameLower = seed.name.toLowerCase()
   const key = Object.keys(IMG_MAP).find(k => nameLower.includes(k))
   const file = key ? IMG_MAP[key] : 'fallback'
-  const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
-  
-  // Prova rätt fas, annars growing, annars fallback
+  const fallback = images['../assets/fallback_growing.png']?.default
+
   const phasesToTry = [currentPhase, 'growing', 'seedling', 'seed']
   for (const phase of phasesToTry) {
-    const url = new URL('../assets/' + file + '_' + phase + '.png', import.meta.url).href
-    // Kontrollera om filen faktiskt finns i build
-    if (!url.includes('undefined')) return url
+    const src = images['../assets/' + file + '_' + phase + '.png']?.default
+    if (src) return src
   }
   return fallback
 }
@@ -132,7 +132,7 @@ function getImage() {
       <div style={{ position: 'relative' }}>
         <div style={{ height: '260px', background: dark ? '#1A1C17' : '#E8EDE4', overflow: 'hidden' }}>
           <img src={getImage()} alt={seed.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={e => { e.target.src = new URL('../assets/fallback_growing.png', import.meta.url).href }} />
+            onError={e => { e.target.src = images['../assets/fallback_growing.png']?.default }} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 50%, ' + bg + ')' }} />
         </div>
         <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>

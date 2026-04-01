@@ -38,14 +38,11 @@ export default function AddSeed({ dark, onBack, onSaved }) {
     if (!name.trim()) { setError('Skriv in ett namn först'); return }
     setAiLoading(true); setError('')
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-          messages: [{ role: 'user', content: 'Du är en trädgårdsexpert. Svara BARA med JSON. För växten "' + name + '": { "species": "latinskt namn", "frost_sensitive": true/false, "requires_pretreatment": true/false, "pretreatment_note": "beskriv förbehandlingen kort eller null", "maintenance_level": "low/medium/high", "companion_planting": "bra grannar eller null", "sowing_note": "kort såningstips för zon 4 Sverige" }' }]
-        })
-      })
+const response = await fetch('/api/ai-lookup', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name })
+})
       const data = await response.json()
       const info = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim())
       if (info.species) setSpecies(info.species)

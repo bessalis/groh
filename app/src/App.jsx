@@ -1,3 +1,4 @@
+import { Icon } from './components/Icon'
 import AddSeed from './pages/AddSeed'
 import SeedDetail from './pages/SeedDetail'
 import Profile from './pages/Profile'
@@ -10,10 +11,10 @@ import { supabase } from './lib/supabase'
 import './styles/tokens.css'
 
 const NAV_ITEMS = [
-  { id: 'home', label: 'Hem', icon: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z' },
-  { id: 'seeds', label: 'Mina fron', icon: 'M17 8C8 10 5.9 16.17 3.82 19.54c-.06.09.15.1.22.02C6.27 17.26 9 13 17 8z' },
-  { id: 'calendar', label: 'Kalender', icon: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z' },
-  { id: 'profile', label: 'Profil', icon: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' },
+  { id: 'home',     label: 'Hem',     icon: 'home'      },
+  { id: 'seeds',    label: 'Mina frön', icon: 'myplants' },
+  { id: 'calendar', label: 'Kalender', icon: 'calendar'  },
+  { id: 'profile',  label: 'Profil',   icon: 'myprofile' },
 ]
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
   const [dark, setDark] = useState(true)
   const [selectedSeed, setSelectedSeed] = useState(null)
   const [addingSeed, setAddingSeed] = useState(false)
+  const [editingSeed, setEditingSeed] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
 
@@ -44,6 +46,7 @@ export default function App() {
     setPage(target)
     setSelectedSeed(null)
     setAddingSeed(false)
+    setEditingSeed(null)
   }
 
   if (authLoading) {
@@ -61,7 +64,7 @@ export default function App() {
   return (
     <div style={{ position: 'relative' }}>
       <button onClick={() => setDark(!dark)} style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: dark ? '#2A2E24' : '#E8E4DA', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
-        {dark ? '☀' : '☽'}
+        <Icon name={dark ? 'sun' : 'moon'} size={18} color={dark ? '#F2F0E8' : '#1E2018'} />
       </button>
 
       {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} />}
@@ -69,10 +72,10 @@ export default function App() {
         <SeedArchive dark={dark} onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
       {page === 'seeds' && addingSeed && (
-        <AddSeed dark={dark} onBack={() => setAddingSeed(false)} onSaved={() => setAddingSeed(false)} />
+        <AddSeed dark={dark} onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
-        <SeedDetail seed={selectedSeed} dark={dark} onBack={() => setSelectedSeed(null)} />
+        <SeedDetail seed={selectedSeed} dark={dark} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />
       )}
       {page === 'calendar' && <Calendar dark={dark} />}
       {page === 'profile' && <Profile dark={dark} onLogout={() => supabase.auth.signOut()} />}
@@ -82,9 +85,7 @@ export default function App() {
           const active = page === item.id && !selectedSeed && !addingSeed
           return (
             <div key={item.id} onClick={() => goTo(item.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', minWidth: '60px' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? activeColor : inactiveColor}>
-                <path d={item.icon} />
-              </svg>
+              <Icon name={item.icon} size={22} color={active ? activeColor : inactiveColor} />
               <span style={{ fontSize: '10px', color: active ? activeColor : inactiveColor, fontFamily: 'Arial, sans-serif' }}>{item.label}</span>
             </div>
           )

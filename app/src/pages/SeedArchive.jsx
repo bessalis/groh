@@ -2,15 +2,21 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 const IMG_MAP = {
-  luktart: 'luktart', luktärt: 'luktart',
-  rosenskara: 'rosenskara', rosenskära: 'rosenskara',
-  aster: 'aster',
-  riddarsporre: 'riddarsporre',
-  lejongap: 'lejongap',
-  jungfruhirs: 'jungfruhirs',
-  brysselkal: 'brysselkal', brysselkål: 'brysselkal',
-  lavendel: 'lavendel',
-  vallmo: 'vallmo', sibirisk: 'vallmo',
+  'Amaranthus': 'amarant',
+  'Callistephus chinensis': 'aster',
+  'Limonium sinuatum': 'luktart',
+  'Brassica oleracea': 'brysselkal',
+  'Celosia argentea': 'celosia',
+  'Phlox drummondii': 'flox',
+  'Briza maxima': 'jungfruhirs',
+  'Lavandula angustifolia': 'lavendel',
+  'Antirrhinum majus': 'lejongap',
+  'Lathyrus odoratus': 'luktart',
+  'Scabiosa atropurpurea': 'praktvadd',
+  'Delphinium': 'riddarsporre',
+  'Cosmos bipinnatus': 'rosenskara',
+  'Cynara scolymus': 'kronartskocka',
+  'Papaver orientale': 'vallmo',
 }
 
 function getPhase(sownDate) {
@@ -22,10 +28,9 @@ function getPhase(sownDate) {
   return 'mature'
 }
 
-function SeedImage({ name, sownDate, dark }) {
-  const key = Object.keys(IMG_MAP).find(k => name.toLowerCase().includes(k))
-  const file = key ? IMG_MAP[key] : 'fallback'
-  const phase = getPhase(sownDate)
+function SeedImage({ name, species, sownDate, currentPhase, dark }) {
+const file = IMG_MAP[species] || 'fallback'
+  const phase = currentPhase || getPhase(sownDate)  // ← använd sparad fas först
   const src = new URL('../assets/' + file + '_' + phase + '.png', import.meta.url).href
   const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
   return (
@@ -128,13 +133,20 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
           style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
-          <SeedImage name={seed.name} sownDate={seed.sown_date} dark={dark} />
+        <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} dark={dark} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: 500, color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
             <p style={{ margin: '0 0 4px', fontSize: '12px', color: muted, fontStyle: 'italic' }}>{seed.species}</p>
             <span style={{ fontSize: '11px', color: statusLabel(seed).color }}>{statusLabel(seed).label}</span>
           </div>
-          <span style={{ color: muted, fontSize: '18px' }}>›</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {seed.is_favorite && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={muted} stroke={muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+            )}
+            <span style={{ color: muted, fontSize: '18px' }}>›</span>
+          </div>
         </div>
       </div>
     )

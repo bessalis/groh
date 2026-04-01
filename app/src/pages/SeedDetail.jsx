@@ -1,11 +1,26 @@
+import { Icon } from '../components/Icon'
+import IconSeed from '../assets/seed.svg?react'
+import IconSeedling from '../assets/seedling.svg?react'
+import IconGrown from '../assets/grown.svg?react'
+import IconMature from '../assets/mature.svg?react'
+import IconWater from '../assets/water.svg?react'
+import IconSun from '../assets/sun.svg?react'
+import IconTemp from '../assets/temperature.svg?react'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const NEXT_STEP = {
+  seed: 'Håll jorden fuktig och varm. Grodden brukar visa sig inom 1-3 veckor.',
+  seedling: 'Låt grodden växa sig stark. Plantera om när den har 2-3 riktiga blad.',
+  growing: 'Dags att plantera ut! Härda av plantan först genom att ställa den ute några timmar per dag.',
+  mature: 'Växten är mogen. Skörda, spara frön eller låt den blomma ut.',
+}
+
 const PHASES = [
-  { id: 'seed', label: 'Frö', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
-  { id: 'seedling', label: 'Grodd', icon: 'M17 8C8 10 5.9 16.17 3.82 19.54c-.06.09.15.1.22.02C6.27 17.26 9 13 17 8z' },
-  { id: 'growing', label: 'Växer', icon: 'M12 22V12m0 0C12 7 7 4 7 4s0 5 5 8zm0 0c0-5 5-8 5-8s0 5-5 8z' },
-  { id: 'mature', label: 'Mogen', icon: 'M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16z' },
+  { id: 'seed', label: 'Frö', icon: 'seed' },
+  { id: 'seedling', label: 'Grodd', icon: 'seedling' },
+  { id: 'growing', label: 'Växer', icon: 'grown' },
+  { id: 'mature', label: 'Mogen', icon: 'mature' },
 ]
 
 const CARE_DATA = {
@@ -24,12 +39,19 @@ const CARE_DATA = {
 }
 
 const IMG_MAP = {
+  // Befintliga
   luktart: 'luktart', luktärt: 'luktart',
   rosenskara: 'rosenskara', rosenskära: 'rosenskara',
   aster: 'aster', riddarsporre: 'riddarsporre',
   lejongap: 'lejongap', jungfruhirs: 'jungfruhirs',
   brysselkal: 'brysselkal', brysselkål: 'brysselkal',
   lavendel: 'lavendel', vallmo: 'vallmo', sibirisk: 'vallmo',
+  // Nya
+  flox: 'flox',
+  amarant: 'amarant',
+  celosia: 'celosia',
+  kronartskocka: 'kronartskocka',
+  praktvadd: 'praktvadd',
 }
 
 function autoPhase(sownDate) {
@@ -39,12 +61,27 @@ function autoPhase(sownDate) {
   return 'seedling'
 }
 
-export default function SeedDetail({ seed, dark, onBack }) {
+export default function SeedDetail({ seed, dark, onBack, onEdit }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [currentPhase, setCurrentPhase] = useState(
     seed.current_phase || autoPhase(seed.sown_date) || 'seed'
   )
   const [savingPhase, setSavingPhase] = useState(false)
+  const [userNotes, setUserNotes] = useState(seed.notes || '')
+  const [savedNotes, setSavedNotes] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(seed.is_favorite || false)
+
+  async function handleToggleFavorite() {
+    const next = !isFavorite
+    setIsFavorite(next)
+    await supabase.from('seeds').update({ is_favorite: next }).eq('id', seed.id)
+  }
+
+  async function handleSaveNotes() {
+    await supabase.from('seeds').update({ notes: userNotes }).eq('id', seed.id)
+    setSavedNotes(true)
+    setTimeout(() => setSavedNotes(false), 2000)
+  }
 
   const bg = dark ? '#12130F' : '#F2F0E8'
   const cardBg = dark ? '#1A1C17' : '#FFFFFF'
@@ -63,15 +100,21 @@ export default function SeedDetail({ seed, dark, onBack }) {
     setSavingPhase(false)
   }
 
-  function getImage() {
-    const nameLower = seed.name.toLowerCase()
-    const key = Object.keys(IMG_MAP).find(k => nameLower.includes(k))
-    const file = key ? IMG_MAP[key] : 'fallback'
-    const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
-    try {
-      return new URL('../assets/' + file + '_' + currentPhase + '.png', import.meta.url).href
-    } catch { return fallback }
+function getImage() {
+  const nameLower = seed.name.toLowerCase()
+  const key = Object.keys(IMG_MAP).find(k => nameLower.includes(k))
+  const file = key ? IMG_MAP[key] : 'fallback'
+  const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
+  
+  // Prova rätt fas, annars growing, annars fallback
+  const phasesToTry = [currentPhase, 'growing', 'seedling', 'seed']
+  for (const phase of phasesToTry) {
+    const url = new URL('../assets/' + file + '_' + phase + '.png', import.meta.url).href
+    // Kontrollera om filen faktiskt finns i build
+    if (!url.includes('undefined')) return url
   }
+  return fallback
+}
 
   async function handleDelete() {
     await supabase.from('seeds').delete().eq('id', seed.id)
@@ -94,6 +137,11 @@ export default function SeedDetail({ seed, dark, onBack }) {
         </div>
         <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>
           ← Tillbaka
+        </button>
+        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? '#F2F0E8' : 'none'} stroke="#F2F0E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
         </button>
       </div>
 
@@ -129,9 +177,7 @@ export default function SeedDetail({ seed, dark, onBack }) {
                   onClick={() => handlePhaseChange(phase.id)}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1, cursor: 'pointer' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: active ? '#4E6E44' : passed ? '#2A3828' : (dark ? '#1A1C17' : '#F0EDE6'), border: '2px solid ' + (active ? '#7A9E6E' : passed ? '#3B5E35' : borderColor), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? '#F2F0E8' : passed ? '#7A9E6E' : muted}>
-                      <path d={phase.icon}/>
-                    </svg>
+                    <Icon name={phase.icon} size={16} color={active ? '#F2F0E8' : muted} />
                   </div>
                   <span style={{ fontSize: '10px', color: active ? muted : passed ? '#4A5244' : borderColor }}>{phase.label}</span>
                 </div>
@@ -143,24 +189,31 @@ export default function SeedDetail({ seed, dark, onBack }) {
           </p>
         </div>
 
-        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', marginBottom: '12px', overflow: 'hidden' }}>
-          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0', padding: '14px 16px 10px' }}>SKÖTSELINSTRUKTIONER</p>
-          {[
-            { icon: 'M12 2a10 10 0 100 20A10 10 0 0012 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z', label: 'Vattning', sub: 'Håll fuktigt', value: care.water },
-            { icon: 'M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z', label: 'Ljus', sub: 'Placering', value: care.light },
-            { icon: 'M9 12c0 1.66 1.34 3 3 3s3-1.34 3-3V5H9v7zM12 1a1 1 0 00-1 1v1H9v9c0 2.21 1.79 4 4 4s4-1.79 4-4V3h-2V2a1 1 0 00-1-1h-2z', label: 'Temperatur', sub: 'Optimal', value: care.temp },
-          ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderTop: i === 0 ? 'none' : '0.5px solid ' + borderColor }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={muted}><path d={item.icon}/></svg>
+        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 12px' }}>SKÖTSELINSTRUKTIONER</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[
+              { icon: 'water', label: 'Vattning', value: care.water },
+              { icon: 'sun', label: 'Ljus', value: care.light },
+              { icon: 'temperature', label: 'Temp', value: care.temp },
+            ].map((item, i) => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: dark ? '#1A1C17' : '#F6F4EC', borderRadius: '10px', padding: '12px 6px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={item.icon} size={18} color={muted} />
+                </div>
+                <span style={{ fontSize: '11px', color: muted }}>{item.label}</span>
+                <span style={{ fontSize: '12px', color: text, textAlign: 'center' }}>{item.value}</span>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: '0 0 1px', fontSize: '14px', color: text }}>{item.label}</p>
-                <p style={{ margin: 0, fontSize: '11px', color: muted }}>{item.sub}</p>
-              </div>
-              <span style={{ fontSize: '13px', color: muted }}>{item.value}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>NÄSTA STEG</p>
+          <p style={{ fontSize: '14px', color: text, margin: 0, lineHeight: 1.5 }}>{NEXT_STEP[currentPhase]}</p>
+          {seed.frost_sensitive && (
+            <p style={{ fontSize: '13px', color: '#E28080', margin: '8px 0 0', lineHeight: 1.5 }}>⚠ Frostkänslig – vänta tills nattfrosten är över innan utplantering.</p>
+          )}
         </div>
 
         {(seed.frost_sensitive || seed.requires_pretreatment) && (
@@ -173,15 +226,27 @@ export default function SeedDetail({ seed, dark, onBack }) {
           </div>
         )}
 
-        {seed.notes && (
-          <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>ANTECKNING</p>
-            <p style={{ fontSize: '14px', color: text, margin: 0, fontStyle: 'italic', lineHeight: 1.5 }}>{seed.notes}</p>
+        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>ANTECKNINGAR</p>
+          <textarea
+            value={userNotes}
+            onChange={e => setUserNotes(e.target.value)}
+            placeholder="Skriv en anteckning..."
+            style={{ width: '100%', minHeight: '80px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '8px', padding: '8px 10px', fontSize: '14px', color: text, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+            <button onClick={handleSaveNotes} style={{ padding: '7px 16px', background: '#4E6E44', border: 'none', borderRadius: '8px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>
+              Spara
+            </button>
+            {savedNotes && <span style={{ fontSize: '12px', color: muted }}>Sparat!</span>}
           </div>
-        )}
+        </div>
       </div>
 
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', marginBottom: '32px' }}>
+        <button onClick={() => onEdit && onEdit(seed)} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
+          Redigera frö
+        </button>
         <button onClick={handleArchive} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
           Arkivera frö
         </button>

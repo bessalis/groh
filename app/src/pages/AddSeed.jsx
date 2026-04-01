@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function AddSeed({ dark, onBack, onSaved }) {
-  const [name, setName] = useState('')
-  const [species, setSpecies] = useState('')
-  const [notes, setNotes] = useState('')
-  const [companion, setCompanion] = useState('')
-  const [frostSensitive, setFrostSensitive] = useState(false)
-  const [pretreatment, setPretreatment] = useState(false)
-  const [pretreatmentNote, setPretreatmentNote] = useState('')
-  const [highMaintenance, setHighMaintenance] = useState(false)
-  const [thumb, setThumb] = useState(null)
-  const [sownDate, setSownDate] = useState('')
-  const [sowingType, setSowingType] = useState('indoor')
+export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
+  const [name, setName] = useState(editSeed?.name || '')
+  const [species, setSpecies] = useState(editSeed?.species || '')
+  const [notes, setNotes] = useState(editSeed?.notes || '')
+  const [companion, setCompanion] = useState(editSeed?.companion_planting || '')
+  const [frostSensitive, setFrostSensitive] = useState(editSeed?.frost_sensitive || false)
+  const [pretreatment, setPretreatment] = useState(editSeed?.requires_pretreatment || false)
+  const [pretreatmentNote, setPretreatmentNote] = useState(editSeed?.pretreatment_notes || '')
+  const [highMaintenance, setHighMaintenance] = useState(editSeed?.maintenance_level === 'high' || false)
+  const [thumb, setThumb] = useState(editSeed?.thumb || null)
+  const [sownDate, setSownDate] = useState(editSeed?.sown_date || '')
+  const [sowingType, setSowingType] = useState(editSeed?.sowing_type || 'indoor')
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -60,14 +60,17 @@ const response = await fetch('/api/ai-lookup', {
   async function handleSave() {
     if (!name.trim()) { setError('Namn krävs'); return }
     setSaving(true)
-    const { error: err } = await supabase.from('seeds').insert({
-      user_id: userId, name: name.trim(), species: species.trim() || null,
+    const payload = {
+      name: name.trim(), species: species.trim() || null,
       notes: notes.trim() || null, companion_planting: companion.trim() || null,
       frost_sensitive: frostSensitive, requires_pretreatment: pretreatment,
       pretreatment_notes: pretreatmentNote || null,
       maintenance_level: highMaintenance ? 'high' : 'low',
-      thumb, sown_date: sownDate || null, sowing_type: sowingType, is_archived: false,
-    })
+      thumb, sown_date: sownDate || null, sowing_type: sowingType,
+    }
+    const { error: err } = editSeed
+      ? await supabase.from('seeds').update(payload).eq('id', editSeed.id)
+      : await supabase.from('seeds').insert({ ...payload, user_id: userId, is_archived: false })
     setSaving(false)
     if (err) { setError('Något gick fel. Försök igen.'); return }
     onSaved && onSaved(); onBack && onBack()
@@ -97,7 +100,7 @@ const response = await fetch('/api/ai-lookup', {
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '120px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 16px 16px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', cursor: 'pointer', padding: 0 }}>← Tillbaka</button>
-        <h1 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, color: text, margin: 0 }}>Nytt frö</h1>
+        <h1 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
         <button onClick={handleSave} disabled={saving} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', fontWeight: 500, cursor: 'pointer', padding: 0 }}>{saving ? '...' : 'Spara'}</button>
       </div>
 
@@ -165,7 +168,7 @@ const response = await fetch('/api/ai-lookup', {
 
       <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', width: '358px', display: 'flex', gap: '8px' }}>
         <button onClick={onBack} style={{ flex: 1, padding: '13px', background: 'transparent', border: '0.5px solid ' + border, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>Avbryt</button>
-        <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: '13px', background: '#4E6E44', border: 'none', borderRadius: '12px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>{saving ? 'Sparar...' : 'Lägg till frö'}</button>
+        <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: '13px', background: '#4E6E44', border: 'none', borderRadius: '12px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>{saving ? 'Sparar...' : editSeed ? 'Spara ändringar' : 'Lägg till frö'}</button>
       </div>
     </div>
   )

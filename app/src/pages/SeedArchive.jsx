@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
+const images = import.meta.glob('../assets/*.png', { eager: true })
+
 const IMG_MAP = {
   'Amaranthus': 'amarant',
   'Callistephus chinensis': 'aster',
@@ -29,10 +31,10 @@ function getPhase(sownDate) {
 }
 
 function SeedImage({ name, species, sownDate, currentPhase, dark }) {
-const file = IMG_MAP[species] || 'fallback'
-  const phase = currentPhase || getPhase(sownDate)  // ← använd sparad fas först
-  const src = new URL('../assets/' + file + '_' + phase + '.png', import.meta.url).href
-  const fallback = new URL('../assets/fallback_growing.png', import.meta.url).href
+  const file = IMG_MAP[species] || 'fallback'
+  const phase = currentPhase || getPhase(sownDate)
+  const fallback = images['../assets/fallback_growing.png']?.default
+  const src = images['../assets/' + file + '_' + phase + '.png']?.default || fallback
   return (
     <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
       <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}

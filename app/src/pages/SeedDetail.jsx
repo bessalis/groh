@@ -138,7 +138,7 @@ function getImage() {
         <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>
           ← Tillbaka
         </button>
-        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1 }}>
+        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '60px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1, zIndex: 10 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? '#F2F0E8' : 'none'} stroke="#F2F0E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>

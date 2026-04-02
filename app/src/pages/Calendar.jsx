@@ -55,13 +55,16 @@ export default function Calendar({ dark }) {
         body: JSON.stringify({
           month: currentMonth,
           year: currentYear,
-          seeds: seeds.map(s => ({
-            name: s.name,
-            species: s.species,
-            sown_date: s.sown_date,
-            current_phase: s.current_phase,
-            frost_sensitive: s.frost_sensitive,
-          }))
+          seeds: [...seeds]
+            .sort((a, b) => (b.sown_date || '').localeCompare(a.sown_date || ''))
+            .slice(0, 6)
+            .map(s => ({
+              name: s.name,
+              species: s.species,
+              sown_date: s.sown_date,
+              current_phase: s.current_phase,
+              frost_sensitive: s.frost_sensitive,
+            }))
         })
       })
       const data = await res.json()

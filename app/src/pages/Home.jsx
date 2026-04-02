@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import illustration from '../assets/luktart_growing.png'
+import grohLogo from '../assets/groh.svg'
 
 const shortcuts = [
   { icon: '+', label: 'Lägg till', action: 'add' },
@@ -40,14 +41,20 @@ export default function Home({ dark, onAdd }) {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '80px', position: 'relative' }}>
-      <div style={{ textAlign: 'center', padding: '48px 16px 16px' }}>
-        <p style={{ fontSize: '13px', color: muted, margin: '0 0 4px' }}>{greeting}</p>
-        <h1 style={{ fontSize: '28px', fontFamily: 'Georgia, serif', fontWeight: 400, margin: '0 0 6px', color: text }}>Din trädgård</h1>
-        <p style={{ fontSize: '14px', color: muted, margin: 0 }}>{plantText(seedCount)}</p>
-      </div>
 
-      <div style={{ margin: '0 16px', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-        <img src={illustration} alt="Garden" style={{ width: '100%', display: 'block' }} />
+      <div style={{ position: 'relative' }}>
+        <img src={illustration} alt="Garden" style={{ width: '100%', display: 'block', height: '540px', objectFit: 'cover' }} />
+
+        {/* topp-gradient för läsbarhet */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '220px', background: 'linear-gradient(to bottom, ' + gradientStop + ' 0%, transparent 100%)', pointerEvents: 'none' }} />
+
+        {/* logga + undertext */}
+        <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, textAlign: 'center', zIndex: 1 }}>
+          <img src={grohLogo} alt="Groh" style={{ width: '180px', display: 'inline-block' }} />
+          <p style={{ fontSize: '13px', color: muted, margin: '-20px 0 0' }}>{plantText(seedCount)}</p>
+        </div>
+
+        {/* botten-gradient + snabbkort */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (

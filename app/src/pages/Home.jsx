@@ -50,7 +50,7 @@ export default function Home({ dark, onAdd }) {
 
         {/* logga + undertext */}
         <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, textAlign: 'center', zIndex: 1 }}>
-          <img src={grohLogo} alt="Groh" style={{ width: '180px', display: 'inline-block' }} />
+          <img src={grohLogo} alt="Groh" style={{ width: '180px', display: 'inline-block', filter: dark ? 'none' : 'invert(1) opacity(0.55)' }} />
           <p style={{ fontSize: '13px', color: muted, margin: '-20px 0 0' }}>{plantText(seedCount)}</p>
         </div>
 

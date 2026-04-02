@@ -8,6 +8,7 @@ export default function Calendar({ dark }) {
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
   const [seeds, setSeeds] = useState([])
+  const [seedsLoaded, setSeedsLoaded] = useState(false)
   const [aiContent, setAiContent] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -18,16 +19,25 @@ export default function Calendar({ dark }) {
   const border = dark ? '#2A2E24' : '#E8E4DA'
 
   useEffect(() => {
+    console.log('[Calendar] Laddar frön från Supabase...')
     supabase.from('seeds')
       .select('id, name, species, sown_date, current_phase, frost_sensitive')
       .eq('is_archived', false)
-      .then(({ data }) => { if (data) setSeeds(data) })
+      .then(({ data }) => {
+        console.log('[Calendar] Frön laddade:', data?.length ?? 0, 'st', data)
+        setSeeds(data || [])
+        setSeedsLoaded(true)
+      })
   }, [])
 
   useEffect(() => {
-    if (seeds.length === 0 && currentMonth === now.getMonth() && currentYear === now.getFullYear()) return
+    console.log('[Calendar] AI-useEffect triggrad – seedsLoaded:', seedsLoaded, '| månad:', currentMonth, currentYear)
+    if (!seedsLoaded) {
+      console.log('[Calendar] Väntar på att frön ska laddas...')
+      return
+    }
     fetchAiContent()
-  }, [currentMonth, currentYear, seeds])
+  }, [currentMonth, currentYear, seedsLoaded])
 
   async function fetchAiContent() {
     const cacheKey = `groh_calendar_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
@@ -37,6 +47,7 @@ export default function Calendar({ dark }) {
     }
 
     setLoading(true)
+    console.log('[Calendar] Skickar fetch till /api/calendar-ai – månad:', currentMonth, currentYear, '| frön:', seeds.length)
     try {
       const res = await fetch('/api/calendar-ai', {
         method: 'POST',

@@ -74,6 +74,19 @@ seedTips ska innehålla ett objekt per frö i listan. Om listan är tom, returne
 
   const result = extractJson(await response.json())
   if (!result) return json({ error: 'AI:n gav inget läsbart svar' }, 502)
+
+  // Appen matchar tips mot fröets exakta namn, men modellen lägger ibland till
+  // t.ex. det latinska namnet ("Luktärt (Lathyrus odoratus)"). Peka tillbaka
+  // varje tips på fröet vars namn det börjar med.
+  if (Array.isArray(result.seedTips)) {
+    result.seedTips = result.seedTips.map(t => {
+      const said = String(t?.seedName || '').toLowerCase()
+      const match = sorted.find(s => said === s.name.toLowerCase())
+        || sorted.find(s => said.startsWith(s.name.toLowerCase()))
+      return match ? { ...t, seedName: match.name } : t
+    })
+  }
+
   return Response.json(result)
 }
 

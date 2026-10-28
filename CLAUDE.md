@@ -11,6 +11,8 @@ Skriv till Linnéa på svenska. Kod, variabelnamn och commit-meddelanden får va
 - Netlify för hosting och serverfunktioner (`app/netlify/functions/`), live på grooh.netlify.app.
 - AI-anrop går via Netlify-funktionerna mot Anthropics API, aldrig direkt från klienten. Nyckeln ligger i Netlifys miljövariabler (`ANTHROPIC_API_KEY`).
 
+Lokalt behövs `app/.env` med Supabase-adress och nyckel. Kopiera `app/.env.example` och fyll i värdena. I produktion ligger samma variabler i Netlify.
+
 Kommandon (kör i `app/`):
 
 ```
@@ -30,7 +32,7 @@ npm run lint
 
 ## Databas
 
-Schemat finns idag bara i Supabase och beskrivs i `app/PROJEKT.md` (tabellen `seeds`). Nya ändringar görs som migreringsfiler i `supabase/migrations/` med Supabase CLI, så att schemat finns i repot. Varje ny tabell ska ha Row Level Security påslaget och policyer som begränsar läsning och skrivning till rätt användare. Testa mot en separat utvecklingsdatabas, inte produktion.
+Projektet ligger i Supabase-regionen Stockholm (eu-north-1). Grundschemat finns i `supabase/migrations/20261028000000_initial_schema.sql`. Nya ändringar görs som migreringsfiler i `supabase/migrations/` med Supabase CLI, så att schemat finns i repot. Varje ny tabell ska ha Row Level Security påslaget och policyer som begränsar läsning och skrivning till rätt användare. Testa mot en separat utvecklingsdatabas, inte produktion.
 
 ## Bilder
 
@@ -54,5 +56,4 @@ Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.cs
 - AI-funktionerna saknar inloggningskontroll och begränsning, så vem som helst som hittar adressen kan använda API-nyckeln.
 - Användarens text klistras rakt in i promptarna i `ai-lookup.js`.
 - Odlingszon 4 är hårdkodad i promptarna och kalendern.
-- `app/.env` är incheckad. Anon-nyckeln är publik i appen ändå, men filen bör ut ur repot.
 - Bilder uppdateras inte i listan efter fasbyte förrän sidan laddas om.

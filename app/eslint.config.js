@@ -26,4 +26,9 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Netlify-funktionerna körs i Node, inte i webbläsaren
+    files: ['netlify/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

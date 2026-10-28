@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Icon } from '../components/Icon'
+import { callAi } from '../lib/api'
 
 const PHASE_ICON = { seed: 'seed', seedling: 'seedling', growing: 'grown', mature: 'mature' }
 
@@ -139,23 +140,18 @@ export default function Calendar({ dark }) {
     setLoading(true)
     console.log('[Calendar] Skickar fetch till /api/calendar-ai – månad:', currentMonth, currentYear, '| frön:', seeds.length)
     try {
-      const res = await fetch('/api/calendar-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          month: currentMonth,
-          year: currentYear,
-          seeds: [...seeds]
-            .sort((a, b) => (b.sown_date || '').localeCompare(a.sown_date || ''))
-            .slice(0, 6)
-            .map(s => ({
-              name: s.name, species: s.species,
-              sown_date: s.sown_date, current_phase: s.current_phase,
-              frost_sensitive: s.frost_sensitive,
-            }))
-        })
+      const data = await callAi('/api/calendar-ai', {
+        month: currentMonth,
+        year: currentYear,
+        seeds: [...seeds]
+          .sort((a, b) => (b.sown_date || '').localeCompare(a.sown_date || ''))
+          .slice(0, 6)
+          .map(s => ({
+            name: s.name, species: s.species,
+            sown_date: s.sown_date, current_phase: s.current_phase,
+            frost_sensitive: s.frost_sensitive,
+          }))
       })
-      const data = await res.json()
       const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim())
       setAiContent(parsed)
       localStorage.setItem(cacheKey, JSON.stringify(parsed))

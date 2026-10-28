@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Lokala miljövariabler (Supabase-adress och nyckel). Se .env.example.
+.env

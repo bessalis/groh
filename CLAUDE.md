@@ -53,7 +53,6 @@ Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.cs
 
 ## Kända brister
 
-- AI-funktionerna saknar inloggningskontroll och begränsning, så vem som helst som hittar adressen kan använda API-nyckeln.
-- Användarens text klistras rakt in i promptarna i `ai-lookup.js`.
+- AI-funktionerna kräver inloggning (`app/netlify/lib/auth.js`) men har ännu inget tak för antal anrop per användare, och uppslagen sparas inte per art.
 - Odlingszon 4 är hårdkodad i promptarna och kalendern.
 - Bilder uppdateras inte i listan efter fasbyte förrän sidan laddas om.

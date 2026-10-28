@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { callAi } from '../lib/api'
 
 export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
@@ -38,13 +39,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
     if (!name.trim()) { setError('Skriv in ett namn först'); return }
     setAiLoading(true); setError('')
     try {
-const response = await fetch('/api/ai-lookup', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name })
-})
-      const data = await response.json()
-      const info = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim())
+      const info = await callAi('/api/ai-lookup', { name })
       if (info.species) setSpecies(info.species)
       if (info.frost_sensitive !== undefined) setFrostSensitive(info.frost_sensitive)
       if (info.requires_pretreatment !== undefined) setPretreatment(info.requires_pretreatment)

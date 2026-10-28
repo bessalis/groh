@@ -39,8 +39,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
     if (!name.trim()) { setError('Skriv in ett namn först'); return }
     setAiLoading(true); setError('')
     try {
-      const data = await callAi('/api/ai-lookup', { name })
-      const info = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim())
+      const info = await callAi('/api/ai-lookup', { name })
       if (info.species) setSpecies(info.species)
       if (info.frost_sensitive !== undefined) setFrostSensitive(info.frost_sensitive)
       if (info.requires_pretreatment !== undefined) setPretreatment(info.requires_pretreatment)

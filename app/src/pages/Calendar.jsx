@@ -140,7 +140,7 @@ export default function Calendar({ dark }) {
     setLoading(true)
     console.log('[Calendar] Skickar fetch till /api/calendar-ai – månad:', currentMonth, currentYear, '| frön:', seeds.length)
     try {
-      const data = await callAi('/api/calendar-ai', {
+      const parsed = await callAi('/api/calendar-ai', {
         month: currentMonth,
         year: currentYear,
         seeds: [...seeds]
@@ -152,7 +152,6 @@ export default function Calendar({ dark }) {
             frost_sensitive: s.frost_sensitive,
           }))
       })
-      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim())
       setAiContent(parsed)
       localStorage.setItem(cacheKey, JSON.stringify(parsed))
     } catch {

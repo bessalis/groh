@@ -31,9 +31,11 @@ function toFacts(ai) {
 }
 
 // Det appen får tillbaka: faktan plus varifrån den kommer.
-function answer(facts, source) {
+// `cache` säger om databasen användes: 'ok', 'no-key' (nyckeln saknas i Netlify)
+// eller 'error' (läsning/skrivning misslyckades, se loggen i Netlify).
+function answer(facts, source, cache) {
   const { key: _key, model: _model, ...rest } = facts
-  return Response.json({ ...rest, source })
+  return Response.json({ ...rest, source, cache })
 }
 
 export default async (req) => {
@@ -47,12 +49,14 @@ export default async (req) => {
 
   // 1. Har någon redan slagit upp det här namnet? Då behövs ingen AI.
   const useDb = dbAvailable()
+  let cache = useDb ? 'ok' : 'no-key'
   if (useDb) {
     try {
       const saved = await findFactsByName(name)
-      if (saved) return answer(saved, 'saved')
+      if (saved) return answer(saved, 'saved', cache)
     } catch (e) {
       console.error('Kunde inte läsa växtfakta', e)
+      cache = 'error'
     }
   }
 
@@ -88,13 +92,14 @@ export default async (req) => {
       await saveDraft(facts)
       await saveName(name, facts.key)
       const stored = await findFactsByKey(facts.key)
-      if (stored) return answer(stored, stored.status === 'reviewed' ? 'saved' : 'ai')
+      if (stored) return answer(stored, stored.status === 'reviewed' ? 'saved' : 'ai', cache)
     } catch (e) {
       console.error('Kunde inte spara växtfakta', e)
+      cache = 'error'
     }
   }
 
-  return answer(facts, 'ai')
+  return answer(facts, 'ai', cache)
 }
 
 export const config = { path: '/api/ai-lookup' }

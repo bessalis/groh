@@ -18,6 +18,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
   const [userId, setUserId] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
+  const [factStatus, setFactStatus] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -47,8 +48,9 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
       if (info.maintenance_level === 'high') setHighMaintenance(true)
       if (info.companion_planting) setCompanion(info.companion_planting)
       if (info.sowing_note) setNotes(info.sowing_note)
+      setFactStatus(info.status || null)
       setAiDone(true)
-    } catch (e) { setError('AI-sökning misslyckades. Fyll i manuellt.') }
+    } catch { setError('AI-sökning misslyckades. Fyll i manuellt.') }
     setAiLoading(false)
   }
 
@@ -111,7 +113,11 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
 
         {aiDone && (
           <div style={{ background: dark ? '#1A2518' : '#E8EDE4', border: '0.5px solid ' + (dark ? '#2A3828' : '#C0D0B8'), borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '8px' }}>
-            <p style={{ fontSize: '12px', color: muted, margin: 0 }}>✓ AI fyllde i latinskt namn och skötselkrav. Justera nedan om något stämmer fel.</p>
+            <p style={{ fontSize: '12px', color: muted, margin: 0 }}>
+              {factStatus === 'reviewed'
+                ? '✓ Fyllt i från granskad växtfakta. Justera nedan om något inte stämmer för just ditt frö.'
+                : '✓ AI fyllde i latinskt namn och skötselkrav. Det är ett ogranskat AI-utkast, så justera nedan om något stämmer fel.'}
+            </p>
           </div>
         )}
 

@@ -9,7 +9,8 @@ Skriv till Linnéa på svenska. Kod, variabelnamn och commit-meddelanden får va
 - React 19 + Vite, PWA. All appkod ligger i `app/`.
 - Supabase för databas och inloggning (`app/src/lib/supabase.js`).
 - Netlify för hosting och serverfunktioner (`app/netlify/functions/`), live på grooh.netlify.app.
-- AI-anrop går via Netlify-funktionerna mot Anthropics API, aldrig direkt från klienten. Nyckeln ligger i Netlifys miljövariabler (`ANTHROPIC_API_KEY`).
+- AI-anrop går via Netlify-funktionerna mot Anthropics API, aldrig direkt från klienten. Nyckeln ligger i Netlifys miljövariabler (`ANTHROPIC_API_KEY`). Modellerna ställs in i `app/netlify/lib/models.js`.
+- Frö-uppslag sparas per art i de delade tabellerna `plant_facts` och `plant_names`. Bara serverfunktionerna skriver dit, med `SUPABASE_SERVICE_ROLE_KEY` (hemlig, finns bara i Netlify). Fakta har status `ai_draft` eller `reviewed` och rättas i Table Editor.
 
 Lokalt behövs `app/.env` med Supabase-adress och nyckel. Kopiera `app/.env.example` och fyll i värdena. I produktion ligger samma variabler i Netlify.
 
@@ -53,6 +54,7 @@ Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.cs
 
 ## Kända brister
 
-- AI-funktionerna kräver inloggning (`app/netlify/lib/auth.js`) men har ännu inget tak för antal anrop per användare, och uppslagen sparas inte per art.
+- AI-funktionerna har ännu inget tak för antal anrop per användare.
+- Kalendertipsen genereras per användare och sparas bara i webbläsaren, inte per zon och månad.
 - Odlingszon 4 är hårdkodad i promptarna och kalendern.
 - Bilder uppdateras inte i listan efter fasbyte förrän sidan laddas om.

@@ -146,11 +146,11 @@ export default function Calendar({ dark }) {
       }))
     }
     try {
-      // Servern skriver högst tio nya artips per anrop. Har du många nya arter
+      // Servern skriver högst sex nya artips per anrop. Har du många nya arter
       // hämtar vi några gånger till, så att alla fröer får sitt tips.
       let data = await callAi('/api/calendar-ai', body)
       setAiContent(data)
-      for (let round = 0; data.pending > 0 && round < 5; round++) {
+      for (let round = 0; data.pending > 0 && round < 8; round++) {
         const next = await callAi('/api/calendar-ai', body)
         if (next.seedTips.length <= data.seedTips.length) break
         data = next

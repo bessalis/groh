@@ -48,6 +48,12 @@ Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i 
 
 Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.css`. Använd dem i stället för hårdkodade färger. Mycket av den befintliga koden har inline-stilar med hårdkodade färger, så flytta över till tokens när du ändå arbetar i en fil, men gör inga stora omskrivningar utan att fråga.
 
+## Mobil
+
+- Sidans bakgrund (`--app-bg`) och `theme-color` sätts av App.jsx efter ljust/mörkt läge, så att ytan runt appen har samma färg.
+- Fält har minst 16px text på pekskärmar, annars zoomar iPhone in och fastnar.
+- Fasta element (menyn, knappar i botten) använder `env(safe-area-inset-*)` och får inte ha fast bredd större än skärmen.
+
 ## Arbetssätt
 
 - En uppgift per gren. Små steg som går att testa i en deploy preview på telefonen.

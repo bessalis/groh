@@ -37,6 +37,15 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Samma bakgrund på hela sidan och i webbläsarens statusfält som i appen.
+  useEffect(() => {
+    const appBg = dark ? '#12130F' : '#F2F0E8'
+    const root = document.documentElement
+    root.style.setProperty('--app-bg', appBg)
+    root.style.colorScheme = dark ? 'dark' : 'light'
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', appBg)
+  }, [dark])
+
   const navBg = dark ? '#12130F' : '#F2F0E8'
   const navBorder = dark ? '#2A2E24' : '#E0DDD4'
   const activeColor = '#7A9E6E'
@@ -63,7 +72,7 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setDark(!dark)} style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: dark ? '#2A2E24' : '#E8E4DA', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
+      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: dark ? '#2A2E24' : '#E8E4DA', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
         <Icon name={dark ? 'sun' : 'moon'} size={18} color={dark ? '#F2F0E8' : '#1E2018'} />
       </button>
 
@@ -80,7 +89,7 @@ export default function App() {
       {page === 'calendar' && <Calendar dark={dark} />}
       {page === 'profile' && <Profile dark={dark} onLogout={() => supabase.auth.signOut()} />}
 
-      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '390px', background: navBg, borderTop: '0.5px solid ' + navBorder, display: 'flex', justifyContent: 'space-around', padding: '10px 0 24px', zIndex: 100 }}>
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: navBg, borderTop: '0.5px solid ' + navBorder, display: 'flex', justifyContent: 'space-around', padding: '10px max(0px, calc((100% - 390px) / 2)) calc(14px + env(safe-area-inset-bottom))', zIndex: 100 }}>
         {NAV_ITEMS.map(item => {
           const active = page === item.id && !selectedSeed && !addingSeed
           return (

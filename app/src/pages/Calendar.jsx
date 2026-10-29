@@ -202,7 +202,7 @@ export default function Calendar({ dark }) {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '100px', position: 'relative', overflow: 'hidden', transition: 'background 0.5s' }}>
+    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', position: 'relative', overflow: 'hidden', transition: 'background 0.5s' }}>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:0.2} }
         @keyframes slideInRight { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }

@@ -92,3 +92,15 @@ export async function saveSpeciesTips(rows) {
     method: 'POST', body: rows, prefer: 'resolution=ignore-duplicates,return=minimal',
   })
 }
+
+export async function getCategories(keys) {
+  if (!keys.length) return []
+  return await rest(`species_categories?key=${encodeURIComponent(inList(keys))}&select=key,category,status`) || []
+}
+
+export async function saveCategories(rows) {
+  if (!rows.length) return
+  await rest('species_categories?on_conflict=key', {
+    method: 'POST', body: rows, prefer: 'resolution=ignore-duplicates,return=minimal',
+  })
+}

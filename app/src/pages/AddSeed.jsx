@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
+import { CATEGORIES } from '../lib/categories'
 
 export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
@@ -19,6 +20,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
   const [factStatus, setFactStatus] = useState(null)
+  const [category, setCategory] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
       if (info.companion_planting) setCompanion(info.companion_planting)
       if (info.sowing_note) setNotes(info.sowing_note)
       setFactStatus(info.status || null)
+      setCategory(info.category || null)
       setAiDone(true)
     } catch { setError('AI-sökning misslyckades. Fyll i manuellt.') }
     setAiLoading(false)
@@ -117,6 +120,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
               {factStatus === 'reviewed'
                 ? '✓ Fyllt i från granskad växtfakta. Justera nedan om något inte stämmer för just ditt frö.'
                 : '✓ AI fyllde i latinskt namn och skötselkrav. Det är ett ogranskat AI-utkast, så justera nedan om något stämmer fel.'}
+              {CATEGORIES[category] && <><br />Kategori: {CATEGORIES[category].label}</>}
             </p>
           </div>
         )}

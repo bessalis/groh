@@ -47,7 +47,7 @@ export default function Profile({ dark, onLogout }) {
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <div style={{ padding: '24px 16px 20px' }}>
-        <h1 style={{ fontSize: '28px', fontFamily: 'Georgia, serif', fontWeight: 400, color: text, margin: '0 0 4px' }}>Profil</h1>
+        <h1 style={{ fontSize: 'var(--display-m)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>Profil</h1>
         <p style={{ fontSize: '13px', color: muted, margin: 0 }}>Hantera ditt konto</p>
       </div>
       <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
@@ -58,14 +58,14 @@ export default function Profile({ dark, onLogout }) {
             </svg>
           </div>
           <div>
-            <p style={{ margin: '0 0 2px', fontSize: '17px', fontWeight: 500, color: text, fontFamily: 'Georgia, serif' }}>{user?.email?.split('@')[0] || 'Trädgårdsälskare'}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 'var(--heading-s)', color: text, fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 500, fontStyle: 'normal' }}>{user?.email?.split('@')[0] || 'Trädgårdsälskare'}</p>
             <p style={{ margin: 0, fontSize: '13px', color: muted }}>{user?.email || ''}</p>
           </div>
         </div>
         <div style={{ borderTop: '0.5px solid ' + border, paddingTop: '16px', display: 'flex', justifyContent: 'space-around' }}>
           {[[seedCount, 'Frön'], ['2026', 'Säsong'], ['Zon ' + ROMAN[zone], chosen ? 'Odlingszon' : 'Antagen zon']].map(([val, lbl]) => (
             <div key={lbl} style={{ textAlign: 'center' }}>
-              <p style={{ margin: '0 0 2px', fontSize: '22px', fontWeight: 500, color: muted, fontFamily: 'Georgia, serif' }}>{val}</p>
+              <p style={{ margin: '0 0 2px', fontSize: 'var(--display-s)', color: muted, fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em' }}>{val}</p>
               <p style={{ margin: 0, fontSize: '11px', color: muted }}>{lbl}</p>
             </div>
           ))}

@@ -33,7 +33,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
   const muted = dark ? '#7A9E6E' : '#7A9E6E'
   const border = dark ? '#2A2E24' : '#E8E4DA'
   const inputBg = dark ? '#1A1C17' : '#FFFFFF'
-  const inputStyle = { width: '100%', background: inputBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box' }
+  const inputStyle = { width: '100%', background: inputBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
   const sectionLabel = { fontSize: '10px', color: muted, letterSpacing: '0.1em', margin: '0 0 10px' }
 
   async function lookupWithAI() {
@@ -97,7 +97,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 16px 16px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', cursor: 'pointer', padding: 0 }}>← Tillbaka</button>
-        <h1 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
+        <h1 style={{ fontSize: 'var(--display-s)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
         <button onClick={handleSave} disabled={saving} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', fontWeight: 500, cursor: 'pointer', padding: 0 }}>{saving ? '...' : 'Spara'}</button>
       </div>
 
@@ -122,7 +122,7 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
         )}
 
         <p style={sectionLabel}>LATINSKT NAMN</p>
-        <input value={species} onChange={e => setSpecies(e.target.value)} placeholder="t.ex. Lathyrus odoratus" style={{ ...inputStyle, fontStyle: 'italic', marginBottom: '16px' }} />
+        <input value={species} onChange={e => setSpecies(e.target.value)} placeholder="t.ex. Lathyrus odoratus" style={{ ...inputStyle, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', marginBottom: '16px' }} />
 
         <div style={{ height: '0.5px', background: border, margin: '4px 0 20px' }} />
         <p style={sectionLabel}>EGENSKAPER</p>

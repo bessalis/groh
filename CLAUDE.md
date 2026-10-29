@@ -48,6 +48,16 @@ Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i 
 
 Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.css`. Använd dem i stället för hårdkodade färger. Mycket av den befintliga koden har inline-stilar med hårdkodade färger, så flytta över till tokens när du ändå arbetar i en fil, men gör inga stora omskrivningar utan att fråga.
 
+### Typografi
+
+Allt finns i `app/src/styles/typography.css`. Tre fria typsnitt (OFL), inbyggda i appen:
+
+- **Reclame** (`--font-display`, klasser `t-display-s/m/l/xl`): sidrubriker, fröns namn och månaden. Aldrig under 22px.
+- **Fraunces**, mjuk (`--font-heading`, `t-heading-s/heading/heading-l`, `t-prose`, `t-latin`): underrubriker (vikt 500), stämningstext (400) och latinska namn i kursiv.
+- **Atkinson Hyperlegible Next** (`--font-body`, `t-body`, `t-small`, `t-caption`, `t-label`): all övrig text, knappar och fält.
+
+Skriv aldrig typsnittsnamn eller egna storlekar direkt i koden, använd tokens eller klasserna. Lägg inte till typsnitt utan att kolla licensen: de ska vara fria för kommersiellt bruk och för inbäddning i webb och app.
+
 ## Mobil
 
 - Sidans bakgrund (`--app-bg`) och `theme-color` sätts av App.jsx efter ljust/mörkt läge, så att ytan runt appen har samma färg.

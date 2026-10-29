@@ -6,7 +6,7 @@ export default function ZonePicker({ zone, chosen, onChange, saving, colors }) {
   const { text, muted, border, cardBg, activeBg } = colors
   return (
     <div>
-      <p style={{ margin: '0 0 10px', fontSize: '15px', color: text, fontFamily: 'Georgia, serif' }}>Jag odlar i zon</p>
+      <p style={{ margin: '0 0 10px', fontSize: 'var(--heading-s)', color: text, fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 500, fontStyle: 'normal' }}>Jag odlar i zon</p>
       <div role="radiogroup" aria-label="Odlingszon" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
         {ZONES.map(z => {
           const active = chosen && z === zone
@@ -24,11 +24,11 @@ export default function ZonePicker({ zone, chosen, onChange, saving, colors }) {
                 border: '0.5px solid ' + (active ? 'var(--salvia-600)' : border),
                 background: active ? activeBg : cardBg, color: text,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                fontFamily: 'var(--font-serif)',
+                fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 500, fontStyle: 'normal',
               }}
             >
               <span style={{ fontSize: '17px' }}>{ROMAN[z]}</span>
-              <span style={{ fontSize: '10px', color: muted, fontFamily: 'var(--font-sans)' }}>{z}</span>
+              <span style={{ fontSize: '10px', color: muted, fontFamily: 'var(--font-body)' }}>{z}</span>
             </button>
           )
         })}

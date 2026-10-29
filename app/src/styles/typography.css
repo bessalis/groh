@@ -1,0 +1,113 @@
+/* Groh! – typografi
+ *
+ * Tre typsnitt, alla fria (SIL Open Font License) och inbyggda i appen,
+ * så att inget hämtas från Google och allt fungerar offline:
+ *
+ *   Reclame                      – display: sidrubriker, fröns namn, månaden. Aldrig under 22px.
+ *   Fraunces (mjuk)              – rubriker, stämningstext och latinska namn (äkta kursiv).
+ *   Atkinson Hyperlegible Next   – brödtext: text, knappar, fält och etiketter.
+ *
+ * Använd klasserna nedan (t-display-l, t-heading, t-body …) eller tokens
+ * (var(--font-display), var(--text-body) …). Inga typsnittsnamn direkt i koden.
+ */
+
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/fraunces/full-italic.css';
+@import '@fontsource/atkinson-hyperlegible-next/400.css';
+@import '@fontsource/atkinson-hyperlegible-next/400-italic.css';
+@import '@fontsource/atkinson-hyperlegible-next/700.css';
+
+@font-face {
+  font-family: 'Reclame';
+  src: url('../assets/fonts/Reclame.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Typsnitt */
+  --font-display: 'Reclame', Georgia, serif;
+  --font-heading: 'Fraunces Variable', Georgia, serif;
+  --font-body: 'Atkinson Hyperlegible Next', system-ui, -apple-system, sans-serif;
+  --font-latin: var(--font-heading); /* används i kursiv */
+  --fraunces-soft: 'SOFT' 100, 'WONK' 0;
+
+  /* Display (Reclame) – minst 22px, annars blir den svår att läsa */
+  --display-s: 24px;
+  --display-m: 32px;
+  --display-l: 44px;
+  --display-xl: 52px;
+
+  /* Rubriker och stämningstext (Fraunces) */
+  --heading-s: 18px;
+  --heading-m: 21px;
+  --heading-l: 24px;
+  --prose: 17px;
+
+  /* Brödtext (Atkinson) */
+  --text-caption: 13px;
+  --text-small: 14px;
+  --text-body: 16px;
+  --text-label: 11px;
+
+  /* Radavstånd */
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-body: 1.55;
+
+  /* Bakåtkompatibelt: äldre kod använder dessa namn */
+  --font-serif: var(--font-heading);
+  --font-sans: var(--font-body);
+}
+
+/* ---------- Textklasser ---------- */
+
+.t-display-xl, .t-display-l, .t-display-m, .t-display-s {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  line-height: var(--leading-tight);
+  letter-spacing: 0.01em;
+}
+.t-display-xl { font-size: var(--display-xl); }
+.t-display-l  { font-size: var(--display-l); }
+.t-display-m  { font-size: var(--display-m); }
+.t-display-s  { font-size: var(--display-s); }
+
+.t-heading-l, .t-heading, .t-heading-s {
+  font-family: var(--font-heading);
+  font-variation-settings: var(--fraunces-soft);
+  font-weight: 500;
+  font-style: normal;
+  line-height: var(--leading-snug);
+}
+.t-heading-l { font-size: var(--heading-l); }
+.t-heading   { font-size: var(--heading-m); }
+.t-heading-s { font-size: var(--heading-s); }
+
+.t-prose {
+  font-family: var(--font-heading);
+  font-variation-settings: var(--fraunces-soft);
+  font-weight: 400;
+  font-size: var(--prose);
+  line-height: var(--leading-body);
+}
+
+.t-latin {
+  font-family: var(--font-latin);
+  font-variation-settings: var(--fraunces-soft);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.t-body    { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); }
+.t-small   { font-family: var(--font-body); font-size: var(--text-small); line-height: var(--leading-body); }
+.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: 1.4; }
+.t-label {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

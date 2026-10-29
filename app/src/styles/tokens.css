@@ -17,8 +17,6 @@
   --paper:    #FAFAF7;
   --paper-dark: #F2F0E8;
 
-  --font-serif: Georgia, 'Times New Roman', serif;
-  --font-sans:  'Arial', sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -46,20 +44,24 @@ body {
   overflow-x: clip;
   min-height: 100dvh;
   color: var(--ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-style: italic;
+  font-family: var(--font-heading);
+  font-variation-settings: var(--fraunces-soft);
+  font-weight: 500;
   color: var(--salvia-800);
 }
 
 /* iPhone zoomar in när man trycker i ett fält med text under 16px, och zoomar
    inte ut igen. Därför minst 16px i fält på pekskärmar. */
+input, textarea, select, button {
+  font-family: inherit;
+}
+
 @media (pointer: coarse) {
   input, textarea, select {
     font-size: max(16px, 1em) !important;

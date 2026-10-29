@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import SeedArchive from './pages/SeedArchive'
 import Calendar from './pages/Calendar'
+import Review from './pages/Review'
 import { supabase } from './lib/supabase'
 import './styles/tokens.css'
 
@@ -76,7 +77,8 @@ export default function App() {
         <Icon name={dark ? 'sun' : 'moon'} size={18} color={dark ? '#F2F0E8' : '#1E2018'} />
       </button>
 
-      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} />}
+      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} />}
+      {page === 'review' && <Review dark={dark} onDone={() => goTo('home')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive dark={dark} onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}

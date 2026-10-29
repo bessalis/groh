@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
 import { fetchCategories, plantKey } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
+import { isReviewTime, loadPending, SEASON } from '../lib/review'
 import illustration from '../assets/luktart_growing.png'
 import grohLogo from '../assets/groh.svg'
 
@@ -19,17 +20,22 @@ const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', '
 const PRIORITY = { seedling: 0, growing: 1, seed: 2, mature: 3 }
 const byUrgency = (a, b) => (PRIORITY[a.current_phase] ?? 4) - (PRIORITY[b.current_phase] ?? 4)
 
-export default function Home({ dark, onAdd, onOpenCalendar }) {
+export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
   const [seedCount, setSeedCount] = useState(0)
   const [todo, setTodo] = useState(null)        // [{ seed, tip }] eller null medan det laddar
   const [season, setSeason] = useState(null)    // { month, text, tip }
   const [categories, setCategories] = useState({})
+  const [toReview, setToReview] = useState(0)
   const bg = dark ? '#12130F' : '#F2F0E8'
   const cardBg = dark ? '#1A1C17' : '#FFFFFF'
   const text = dark ? '#F2F0E8' : '#1E2018'
   const muted = dark ? '#7A9E6E' : '#7A9E6E'
   const borderColor = dark ? '#2A2E24' : '#E8E4DA'
   const gradientStop = dark ? '#12130F' : '#F2F0E8'
+
+  useEffect(() => {
+    if (isReviewTime()) loadPending().then(list => setToReview(list.length)).catch(() => { /* kortet visas inte */ })
+  }, [])
 
   useEffect(() => {
     const now = new Date()
@@ -103,6 +109,20 @@ export default function Home({ dark, onAdd, onOpenCalendar }) {
 
       <div style={{ padding: '24px 16px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <h2 className="t-heading-l" style={{ color: text, margin: '0 0 2px' }}>Just nu</h2>
+
+        {/* Höstbokslut */}
+        {toReview > 0 && onOpenReview && (
+          <section style={{ background: '#808F73', borderRadius: '16px', padding: '18px', color: '#11171F' }}>
+            <p className="t-label" style={{ margin: '0 0 8px', color: '#11171F' }}>Höstbokslut {SEASON}</p>
+            <p className="t-heading" style={{ margin: '0 0 6px', color: '#11171F' }}>Dags att stänga säsongen</p>
+            <p className="t-small" style={{ margin: '0 0 14px', color: '#11171F' }}>
+              Gå igenom {toReview === 1 ? 'årets sådd' : `årets ${toReview} sådder`}: vad blev bra, och vad blev inget? Det du lär dig följer med till nästa år.
+            </p>
+            <button type="button" onClick={onOpenReview} className="t-body" style={{ background: '#11171F', color: '#F2F0E8', border: 'none', borderRadius: '10px', padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}>
+              Börja bokslutet
+            </button>
+          </section>
+        )}
 
         {/* Att göra nu */}
         <section style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '16px', padding: '16px' }}>

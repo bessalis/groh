@@ -57,15 +57,31 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
   const inputBg = dark ? '#1A1C17' : '#FFFFFF'
   const btnBg = dark ? '#4E6E44' : '#3B5E35'
 
-  async function fetchSeeds() {
+  const [compost, setCompost] = useState(false)
+
+  async function fetchSeeds(showCompost = compost) {
+    setLoading(true)
     const { data } = await supabase
-      .from('seeds').select('*').eq('is_archived', false)
+      .from('seeds').select('*').eq('is_archived', showCompost)
       .order('created_at', { ascending: false })
     if (data) setSeeds(data)
     setLoading(false)
   }
 
-  useEffect(() => { fetchSeeds() }, [])
+  // Hämtas en gång vid start; fliken byter lista via switchTab
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchSeeds(false) }, [])
+
+  function switchTab(showCompost) {
+    setCompost(showCompost)
+    setSwipedId(null)
+    fetchSeeds(showCompost)
+  }
+
+  async function restoreSeed(id) {
+    await supabase.from('seeds').update({ is_archived: false }).eq('id', id)
+    setSeeds(prev => prev.filter(s => s.id !== id))
+  }
 
   async function archiveSeed(id) {
     await supabase.from('seeds').update({ is_archived: true }).eq('id', id)
@@ -158,7 +174,15 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <div style={{ padding: '24px 16px 16px' }}>
         <h1 style={{ fontSize: 'var(--display-l)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>Fröarkivet</h1>
-        <p style={{ fontSize: '13px', color: muted, margin: '0 0 20px' }}>{seeds.length} frön i din samling</p>
+        <p style={{ fontSize: '13px', color: muted, margin: '0 0 16px' }}>{compost ? `${seeds.length} i komposten` : `${seeds.length} frön i din samling`}</p>
+        <div role="tablist" aria-label="Visa" style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+          {[[false, 'Fröer'], [true, 'Komposten']].map(([value, label]) => (
+            <button key={label} type="button" role="tab" aria-selected={compost === value} onClick={() => switchTab(value)} className="t-small"
+              style={{ padding: '8px 14px', borderRadius: '999px', cursor: 'pointer', border: '0.5px solid ' + (compost === value ? muted : borderColor), background: compost === value ? (dark ? '#2A4030' : '#D4E4CC') : 'transparent', color: text, fontWeight: compost === value ? 700 : 400 }}>
+              {label}
+            </button>
+          ))}
+        </div>
         <div style={{ marginBottom: '12px' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Sök frön..."
             style={{ width: '100%', padding: '12px 16px', background: inputBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', fontSize: '14px', color: text, outline: 'none', boxSizing: 'border-box' }} />
@@ -170,8 +194,20 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
       </div>
       <div style={{ padding: '0 16px' }}>
         {loading && <p style={{ color: muted, fontStyle: 'italic', textAlign: 'center' }}>Hämtar frön...</p>}
-        {!loading && filtered.length === 0 && <p style={{ color: muted, textAlign: 'center' }}>Inga frön hittades</p>}
-        {filtered.map(seed => <SwipeCard key={seed.id} seed={seed} />)}
+        {!loading && filtered.length === 0 && <p style={{ color: muted, textAlign: 'center' }}>{compost ? 'Komposten är tom.' : 'Inga frön hittades'}</p>}
+        {compost && !loading && filtered.length > 0 && (
+          <p className="t-small" style={{ color: muted, margin: '0 0 12px' }}>Här hamnar det som inte blev något, och det du arkiverat. Inget försvinner: det blir näring till nästa år.</p>
+        )}
+        {!compost && filtered.map(seed => <SwipeCard key={seed.id} seed={seed} />)}
+        {compost && filtered.map(seed => (
+          <div key={seed.id} style={{ background: dark ? '#1A1C17' : '#FFFFFF', border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="t-heading-s" style={{ color: text, margin: 0 }}>{seed.name}</p>
+              {seed.thumb_note && <p className="t-caption" style={{ color: muted, margin: '2px 0 0' }}>{seed.thumb_note}</p>}
+            </div>
+            <button type="button" onClick={() => restoreSeed(seed.id)} className="t-small" style={{ background: 'none', border: '0.5px solid ' + borderColor, borderRadius: '10px', padding: '8px 12px', color: text, cursor: 'pointer', whiteSpace: 'nowrap' }}>Plocka tillbaka</button>
+          </div>
+        ))}
       </div>
     </div>
   )

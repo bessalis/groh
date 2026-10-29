@@ -132,30 +132,35 @@ export default function Calendar({ dark }) {
   }, [currentMonth, currentYear, seedsLoaded])
 
   async function fetchAiContent() {
+    // Tipsen sparas per zon och månad på servern och delas mellan alla.
+    // Den lokala kopian används bara om servern inte svarar, t.ex. offline.
     const cacheKey = `groh_calendar_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      try { setAiContent(JSON.parse(cached)); return } catch {}
-    }
     setLoading(true)
-    console.log('[Calendar] Skickar fetch till /api/calendar-ai – månad:', currentMonth, currentYear, '| frön:', seeds.length)
+    const body = {
+      month: currentMonth,
+      year: currentYear,
+      seeds: seeds.map(s => ({
+        name: s.name, species: s.species,
+        current_phase: s.current_phase,
+        frost_sensitive: s.frost_sensitive,
+      }))
+    }
     try {
-      const parsed = await callAi('/api/calendar-ai', {
-        month: currentMonth,
-        year: currentYear,
-        seeds: [...seeds]
-          .sort((a, b) => (b.sown_date || '').localeCompare(a.sown_date || ''))
-          .slice(0, 6)
-          .map(s => ({
-            name: s.name, species: s.species,
-            sown_date: s.sown_date, current_phase: s.current_phase,
-            frost_sensitive: s.frost_sensitive,
-          }))
-      })
-      setAiContent(parsed)
-      localStorage.setItem(cacheKey, JSON.stringify(parsed))
+      // Servern skriver högst tio nya artips per anrop. Har du många nya arter
+      // hämtar vi några gånger till, så att alla fröer får sitt tips.
+      let data = await callAi('/api/calendar-ai', body)
+      setAiContent(data)
+      for (let round = 0; data.pending > 0 && round < 5; round++) {
+        const next = await callAi('/api/calendar-ai', body)
+        if (next.seedTips.length <= data.seedTips.length) break
+        data = next
+        setAiContent(data)
+      }
+      try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* fullt eller blockerat */ }
     } catch {
-      setAiContent(null)
+      let cached = null
+      try { cached = JSON.parse(localStorage.getItem(cacheKey)) } catch { /* ingen lokal kopia */ }
+      setAiContent(cached)
     }
     setLoading(false)
   }
@@ -306,6 +311,11 @@ export default function Calendar({ dark }) {
               {aiContent.generalTips.map((tip, i) => (
                 <p key={i} style={{ fontSize: '14px', color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.6 }}>{tip}</p>
               ))}
+              <p style={{ fontSize: '11px', color: accent, margin: '4px 0 0', opacity: 0.75 }}>
+                {aiContent.seasonStatus === 'reviewed'
+                  ? 'Texterna på den här sidan är skrivna med AI och granskade.'
+                  : 'Texterna på den här sidan är skrivna av AI och ännu inte granskade.'}
+              </p>
             </div>
           ) : (
             <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0, opacity: 0.6 }}>Hämtar inspirationstips...</p>

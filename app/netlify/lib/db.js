@@ -13,7 +13,7 @@ export function dbAvailable() {
   return config() !== null
 }
 
-async function rest(path, { method = 'GET', body, prefer } = {}) {
+export async function rest(path, { method = 'GET', body, prefer } = {}) {
   const c = config()
   if (!c) throw new Error('SUPABASE_SERVICE_ROLE_KEY saknas i Netlify')
   const res = await fetch(`${c.url}/rest/v1/${path}`, {
@@ -62,5 +62,33 @@ export async function saveName(name, key) {
     method: 'POST',
     body: { name, key },
     prefer: 'resolution=ignore-duplicates,return=minimal',
+  })
+}
+
+// PostgREST-filter "in" med värden som kan innehålla mellanslag och kommatecken.
+function inList(values) {
+  return 'in.(' + values.map(v => '"' + String(v).replace(/"/g, '\\"') + '"').join(',') + ')'
+}
+
+export async function getSeasonTips(zone, month) {
+  const rows = await rest(`season_tips?zone=eq.${zone}&month=eq.${month}&select=season_text,general_tips,status`)
+  return rows?.[0] || null
+}
+
+export async function getSpeciesTips(keys, zone, month) {
+  if (!keys.length) return []
+  return await rest(`species_tips?zone=eq.${zone}&month=eq.${month}&key=${encodeURIComponent(inList(keys))}&select=key,phase,tip,status`) || []
+}
+
+export async function saveSeasonTips(row) {
+  await rest('season_tips?on_conflict=zone,month', {
+    method: 'POST', body: row, prefer: 'resolution=ignore-duplicates,return=minimal',
+  })
+}
+
+export async function saveSpeciesTips(rows) {
+  if (!rows.length) return
+  await rest('species_tips?on_conflict=key,zone,month,phase', {
+    method: 'POST', body: rows, prefer: 'resolution=ignore-duplicates,return=minimal',
   })
 }

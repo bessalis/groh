@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import plantImg from '../assets/brysselkal_seedling.png'
+import grohLogo from '../assets/groh.svg'
 import { supabase } from '../lib/supabase'
 
 export default function Login({ dark, onLogin }) {
@@ -18,16 +19,16 @@ export default function Login({ dark, onLogin }) {
   const inputStyle = { width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
 
   async function handleSubmit() {
-    if (!email || !password) { setError('Fyll i e-post och losenord'); return }
+    if (!email || !password) { setError('Fyll i e-post och lösenord'); return }
     setLoading(true); setError(''); setSuccess('')
     if (mode === 'login') {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) { setError('Fel e-post eller losenord'); setLoading(false); return }
+      if (err) { setError('Fel e-post eller lösenord'); setLoading(false); return }
       onLogin && onLogin()
     } else {
       const { error: err } = await supabase.auth.signUp({ email, password })
       if (err) { setError('Kunde inte skapa konto'); setLoading(false); return }
-      setSuccess('Kolla din e-post for att bekrafta!')
+      setSuccess('Kolla din e-post för att bekräfta!')
     }
     setLoading(false)
   }
@@ -35,11 +36,13 @@ export default function Login({ dark, onLogin }) {
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '220px', height: '220px', margin: '0 auto 24px', overflow: 'hidden' }}>
-        <img src={plantImg} alt='Groh' style={{ width: '100%', objectFit: 'contain', filter: dark ? 'none' : 'brightness(0.9)' }} />
+        <img src={plantImg} alt="" style={{ width: '100%', objectFit: 'contain', filter: dark ? 'none' : 'brightness(0.9)' }} />
       </div>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: 'var(--display-xl)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 8px' }}>Groh!</h1>
-        <p style={{ fontSize: '14px', color: muted, margin: 0 }}>Din digitala tradgard</p>
+        <h1 style={{ margin: '0 0 8px', lineHeight: 0 }}>
+          <img src={grohLogo} alt="Groh!" style={{ width: '170px', display: 'inline-block', filter: dark ? 'none' : 'invert(1) opacity(0.55)' }} />
+        </h1>
+        <p className="t-body" style={{ color: muted, margin: 0 }}>Din digitala trädgård</p>
       </div>
       <div style={{ width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '24px' }}>
         <div style={{ display: 'flex', marginBottom: '24px', background: bg, borderRadius: '10px', padding: '4px' }}>
@@ -51,7 +54,7 @@ export default function Login({ dark, onLogin }) {
           <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="din@epost.se" style={inputStyle} />
         </div>
         <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '12px', color: muted, margin: '0 0 5px' }}>Losenord</p>
+          <p style={{ fontSize: '12px', color: muted, margin: '0 0 5px' }}>Lösenord</p>
           <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="min 6 tecken" style={inputStyle} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         </div>
         {error && <p style={{ fontSize: '13px', color: '#E28080', textAlign: 'center', margin: '0 0 12px' }}>{error}</p>}

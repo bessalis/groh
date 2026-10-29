@@ -146,8 +146,8 @@ function getImage() {
       </div>
 
       <div style={{ padding: '0 16px', marginTop: '-20px', position: 'relative' }}>
-        <h1 style={{ fontSize: '26px', fontFamily: 'Georgia, serif', fontWeight: 400, color: text, margin: '0 0 4px' }}>{seed.name}</h1>
-        <p style={{ fontSize: '14px', color: muted, fontStyle: 'italic', margin: '0 0 20px' }}>{seed.species}</p>
+        <h1 style={{ fontSize: 'var(--display-m)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>{seed.name}</h1>
+        <p style={{ fontSize: '15px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', margin: '0 0 20px' }}>{seed.species}</p>
 
         {seed.sown_date && (
           <div style={{ background: dark ? '#1A2518' : '#E8EDE4', border: '0.5px solid ' + (dark ? '#2A3828' : '#C0D0B8'), borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>

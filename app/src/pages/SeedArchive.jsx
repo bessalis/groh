@@ -137,8 +137,8 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
           style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
         <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} dark={dark} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: 500, color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
-            <p style={{ margin: '0 0 4px', fontSize: '12px', color: muted, fontStyle: 'italic' }}>{seed.species}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 'var(--display-s)', color: text, lineHeight: 1.1, fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em' }}>{seed.name}</p>
+            <p style={{ margin: '0 0 4px', fontSize: '14px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic' }}>{seed.species}</p>
             <span style={{ fontSize: '11px', color: statusLabel(seed).color }}>{statusLabel(seed).label}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
@@ -157,7 +157,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <div style={{ padding: '24px 16px 16px' }}>
-        <h1 style={{ fontSize: '28px', fontFamily: 'Georgia, serif', fontWeight: 400, color: text, margin: '0 0 4px' }}>Fröarkivet</h1>
+        <h1 style={{ fontSize: 'var(--display-l)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>Fröarkivet</h1>
         <p style={{ fontSize: '13px', color: muted, margin: '0 0 20px' }}>{seeds.length} frön i din samling</p>
         <div style={{ marginBottom: '12px' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Sök frön..."

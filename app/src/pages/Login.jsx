@@ -15,7 +15,7 @@ export default function Login({ dark, onLogin }) {
   const text = dark ? '#F2F0E8' : '#1E2018'
   const muted = dark ? '#7A9E6E' : '#7A9E6E'
   const border = dark ? '#2A2E24' : '#E8E4DA'
-  const inputStyle = { width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box' }
+  const inputStyle = { width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
 
   async function handleSubmit() {
     if (!email || !password) { setError('Fyll i e-post och losenord'); return }
@@ -38,7 +38,7 @@ export default function Login({ dark, onLogin }) {
         <img src={plantImg} alt='Groh' style={{ width: '100%', objectFit: 'contain', filter: dark ? 'none' : 'brightness(0.9)' }} />
       </div>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '42px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, color: text, margin: '0 0 8px' }}>Groh!</h1>
+        <h1 style={{ fontSize: 'var(--display-xl)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 8px' }}>Groh!</h1>
         <p style={{ fontSize: '14px', color: muted, margin: 0 }}>Din digitala tradgard</p>
       </div>
       <div style={{ width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '24px' }}>

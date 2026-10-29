@@ -221,7 +221,7 @@ export default function Calendar({ dark }) {
           <h1
             key={animKey}
             style={{
-              fontSize: '36px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400,
+              fontSize: 'var(--display-xl)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em',
               color: secondary, margin: 0, lineHeight: 1.1,
               animation: slideDir >= 0 ? 'slideInRight 0.35s ease forwards' : 'slideInLeft 0.35s ease forwards'
             }}
@@ -251,7 +251,7 @@ export default function Calendar({ dark }) {
               <Skeleton w="95%" /><Skeleton w="80%" /><Skeleton w="88%" />
             </div>
           ) : aiContent?.seasonText ? (
-            <p style={{ fontSize: '15px', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.7 }}>
+            <p style={{ fontSize: 'var(--prose)', fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 400, color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.55 }}>
               {aiContent.seasonText}
             </p>
           ) : (

@@ -68,13 +68,13 @@ export default function Home({ dark, onAdd }) {
 
       {recentSeeds.length > 0 && (
         <div style={{ padding: '24px 16px 0' }}>
-          <h2 style={{ fontSize: '18px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, marginBottom: '12px', color: text }}>Senast tillagda</h2>
+          <h2 style={{ fontSize: 'var(--heading-m)', fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 500, fontStyle: 'normal', marginBottom: '12px', color: text }}>Senast tillagda</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {recentSeeds.map((seed, i) => (
               <div key={i} style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: seed.sown_date ? '#7A9E6E' : borderColor, flexShrink: 0 }} />
                 <div>
-                  <p style={{ margin: 0, fontSize: '14px', color: text, fontFamily: 'Georgia, serif' }}>{seed.name}</p>
+                  <p style={{ margin: 0, fontSize: 'var(--heading-s)', color: text, fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 500, fontStyle: 'normal' }}>{seed.name}</p>
                   {seed.sown_date && <p style={{ margin: 0, fontSize: '11px', color: muted }}>Sått {new Date(seed.sown_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}</p>}
                 </div>
               </div>

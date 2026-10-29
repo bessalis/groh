@@ -61,7 +61,7 @@ export default function App() {
   if (authLoading) {
     return (
       <div style={{ background: dark ? '#12130F' : '#F2F0E8', minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '24px', color: '#7A9E6E' }}>Groh!</p>
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', fontSize: 'var(--display-m)', color: '#7A9E6E' }}>Groh!</p>
       </div>
     )
   }
@@ -95,7 +95,7 @@ export default function App() {
           return (
             <div key={item.id} onClick={() => goTo(item.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', minWidth: '60px' }}>
               <Icon name={item.icon} size={22} color={active ? activeColor : inactiveColor} />
-              <span style={{ fontSize: '10px', color: active ? activeColor : inactiveColor, fontFamily: 'Arial, sans-serif' }}>{item.label}</span>
+              <span style={{ fontSize: '10px', color: active ? activeColor : inactiveColor, fontFamily: 'var(--font-body)' }}>{item.label}</span>
             </div>
           )
         })}

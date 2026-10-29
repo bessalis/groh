@@ -127,7 +127,7 @@ function getImage() {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '160px' }}>
+    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' }}>
 
       <div style={{ position: 'relative' }}>
         <div style={{ height: '260px', background: dark ? '#1A1C17' : '#E8EDE4', overflow: 'hidden' }}>

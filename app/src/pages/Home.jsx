@@ -40,7 +40,7 @@ export default function Home({ dark, onAdd }) {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '80px', position: 'relative' }}>
+    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))', position: 'relative' }}>
 
       <div style={{ position: 'relative' }}>
         <img src={illustration} alt="Garden" style={{ width: '100%', display: 'block', height: '540px', objectFit: 'cover' }} />

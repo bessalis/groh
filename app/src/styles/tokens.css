@@ -33,8 +33,18 @@
   padding: 0;
 }
 
+/* Appens bakgrund sätts av App.jsx efter ljust/mörkt läge, så att ytan runt
+   appen och det som syns när man drar i sidan har samma färg som appen. */
+html {
+  background: var(--app-bg, #12130F);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
 body {
-  background: var(--paper);
+  background: var(--app-bg, #12130F);
+  overflow-x: clip;
+  min-height: 100dvh;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -46,4 +56,12 @@ h1, h2, h3 {
   font-weight: 400;
   font-style: italic;
   color: var(--salvia-800);
+}
+
+/* iPhone zoomar in när man trycker i ett fält med text under 16px, och zoomar
+   inte ut igen. Därför minst 16px i fält på pekskärmar. */
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: max(16px, 1em) !important;
+  }
 }

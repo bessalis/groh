@@ -155,7 +155,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <div style={{ padding: '24px 16px 16px' }}>
         <h1 style={{ fontSize: '28px', fontFamily: 'Georgia, serif', fontWeight: 400, color: text, margin: '0 0 4px' }}>Fröarkivet</h1>
         <p style={{ fontSize: '13px', color: muted, margin: '0 0 20px' }}>{seeds.length} frön i din samling</p>

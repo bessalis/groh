@@ -12,6 +12,7 @@ Skriv till Linnéa på svenska. Kod, variabelnamn och commit-meddelanden får va
 - AI-anrop går via Netlify-funktionerna mot Anthropics API, aldrig direkt från klienten. Nyckeln ligger i Netlifys miljövariabler (`ANTHROPIC_API_KEY`). Modellerna ställs in i `app/netlify/lib/models.js`.
 - Frö-uppslag sparas per art i de delade tabellerna `plant_facts` och `plant_names`. Bara serverfunktionerna skriver dit, med `SUPABASE_SERVICE_ROLE_KEY` (hemlig, finns bara i Netlify). Fakta har status `ai_draft` eller `reviewed` och rättas i Table Editor.
 - Odlingszonen (1–8, visas som I–VIII) sparas i användarens `user_metadata.zone` via `app/src/lib/zone.js`. Zon II antas tills användaren valt. Serverfunktionerna läser zonen från den verifierade användaren.
+- Växtkategorier (åtta stycken, se `app/netlify/lib/categories.js`) sparas per art i `species_categories` och hämtas via `/api/categorize`. Ikonerna ligger som SVG-filer i `app/src/assets/icons/categories/` (tillfälligt Phosphor) och visas med `CategoryIcon`.
 - Kalendertips sparas på samma sätt: `season_tips` (säsongstext och allmänna tips per zon och månad) och `species_tips` (ett tips per art, zon, månad och fas).
 
 Lokalt behövs `app/.env` med Supabase-adress och nyckel. Kopiera `app/.env.example` och fyll i värdena. I produktion ligger samma variabler i Netlify.

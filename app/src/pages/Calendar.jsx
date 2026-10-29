@@ -4,6 +4,8 @@ import { Icon } from '../components/Icon'
 import { callAi } from '../lib/api'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
+import CategoryIcon from '../components/CategoryIcon'
+import { fetchCategories, plantKey, PHASE_LABEL } from '../lib/categories'
 
 const PHASE_ICON = { seed: 'seed', seedling: 'seedling', growing: 'grown', mature: 'mature' }
 
@@ -109,6 +111,7 @@ export default function Calendar({ dark }) {
   const chipsRef = useRef(null)
   const [user, setUser] = useState(null)
   const [savingZone, setSavingZone] = useState(false)
+  const [categories, setCategories] = useState({})
   const { zone, chosen: zoneChosen } = readZone(user)
 
   const season = getSeason(currentMonth)
@@ -134,6 +137,7 @@ export default function Calendar({ dark }) {
         console.log('[Calendar] Frön laddade:', data?.length ?? 0, 'st')
         setSeeds(data || [])
         setSeedsLoaded(true)
+        if (data?.length) fetchCategories(data, setCategories).catch(() => { /* ikonerna faller tillbaka på fasen */ })
       })
   }, [])
 
@@ -274,6 +278,7 @@ export default function Calendar({ dark }) {
                 {seeds.map((seed, i) => {
                   const active = selectedSeed === seed.name
                   const icon = PHASE_ICON[seed.current_phase] || 'seed'
+                  const category = categories[plantKey(seed)]
                   const tip = aiContent?.seedTips?.find(t => t.seedName === seed.name)?.tip || ''
                   return (
                     <button
@@ -291,8 +296,15 @@ export default function Calendar({ dark }) {
                         boxSizing: 'border-box',
                       }}
                     >
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? (dark ? '#2A4030' : '#D4E4CC') : (dark ? '#1E2A1A' : '#EDF2EA'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon name={icon} size={16} color="#7A9E6E" />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? (dark ? '#2A4030' : '#D4E4CC') : (dark ? '#1E2A1A' : '#EDF2EA'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {category
+                            ? <CategoryIcon category={category} size={17} color="#7A9E6E" />
+                            : <Icon name={icon} size={16} color="#7A9E6E" />}
+                        </div>
+                        {category && PHASE_LABEL[seed.current_phase] && (
+                          <span style={{ fontSize: '10px', color: accent, opacity: 0.85, whiteSpace: 'nowrap' }}>{PHASE_LABEL[seed.current_phase]}</span>
+                        )}
                       </div>
                       <p style={{ fontSize: '12px', fontWeight: 500, color: dark ? '#F2F0E8' : '#1E2018', margin: 0, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
                         {seed.name}

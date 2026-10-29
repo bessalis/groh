@@ -93,10 +93,10 @@ export default function Home({ dark, onAdd, onOpenCalendar }) {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (
-            <div key={i} onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: dark ? 'rgba(124, 144, 112, 0.92)' : 'rgba(90, 111, 86, 0.92)', borderRadius: '12px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', color: '#F2F0E8' }}>{s.icon}</div>
-              <span style={{ fontSize: '12px', color: '#F2F0E8', fontWeight: 500 }}>{s.label}</span>
-            </div>
+            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: '#808F73', border: 'none', borderRadius: '14px', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#11171F' }}>
+              <span aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#75836B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#11171F' }}>{s.icon}</span>
+              <span className="t-body" style={{ fontSize: '18px', fontWeight: 500, color: '#11171F' }}>{s.label}</span>
+            </button>
           ))}
         </div>
       </div>

@@ -104,3 +104,17 @@ export async function saveCategories(rows) {
     method: 'POST', body: rows, prefer: 'resolution=ignore-duplicates,return=minimal',
   })
 }
+
+// Tak för AI-anrop per användare och dag. Standard 100, kan ändras med
+// miljövariabeln AI_DAILY_LIMIT i Netlify. Om databasen inte svarar släpps
+// anropet igenom hellre än att appen slutar fungera.
+export async function useAiQuota(userId) {
+  if (!userId || !dbAvailable()) return true
+  const limit = Number(process.env.AI_DAILY_LIMIT) || 100
+  try {
+    return (await rest('rpc/use_ai_quota', { method: 'POST', body: { p_user_id: userId, p_limit: limit } })) !== false
+  } catch (e) {
+    console.error('Kunde inte kontrollera AI-taket', e)
+    return true
+  }
+}

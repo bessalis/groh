@@ -14,6 +14,7 @@ Skriv till Linnéa på svenska. Kod, variabelnamn och commit-meddelanden får va
 - Odlingszonen (1–8, visas som I–VIII) sparas i användarens `user_metadata.zone` via `app/src/lib/zone.js`. Zon II antas tills användaren valt. Serverfunktionerna läser zonen från den verifierade användaren.
 - Växtkategorier (åtta stycken, se `app/netlify/lib/categories.js`) sparas per art i `species_categories` och hämtas via `/api/categorize`. Ikonerna ligger som SVG-filer i `app/src/assets/icons/categories/` (tillfälligt Phosphor) och visas med `CategoryIcon`.
 - Höstbokslut (`app/src/pages/Review.jsx`, `app/src/lib/review.js`): sparar hur årets sådder gick i `season_reviews` (egna rader per användare), nollställer sådden på fröet och flyttar det som blev inget till Komposten (arkiverade fröer, fliken i Fröarkivet). I fas 2 flyttas det till rätt modell med `plants`.
+- Tak för AI-anrop: `useAiQuota` i `app/netlify/lib/db.js` räknar varje riktigt AI-anrop per användare och dag i `ai_usage` (standard 100, ändras med `AI_DAILY_LIMIT` i Netlify). Sparade svar räknas inte. Nya AI-funktioner ska anropa `useAiQuota` före anropet till Anthropic.
 - Kalendertips sparas på samma sätt: `season_tips` (säsongstext och allmänna tips per zon och månad) och `species_tips` (ett tips per art, zon, månad och fas).
 
 Lokalt behövs `app/.env` med Supabase-adress och nyckel. Kopiera `app/.env.example` och fyll i värdena. I produktion ligger samma variabler i Netlify.
@@ -74,5 +75,4 @@ Skriv aldrig typsnittsnamn eller egna storlekar direkt i koden, använd tokens e
 
 ## Kända brister
 
-- AI-funktionerna har ännu inget tak för antal anrop per användare.
 - Bilder uppdateras inte i listan efter fasbyte förrän sidan laddas om.

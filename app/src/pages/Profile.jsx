@@ -4,10 +4,15 @@ import IconAlerts from '../assets/alerts.svg?react'
 import IconHelp from '../assets/help.svg?react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { readZone, saveZone, ROMAN } from '../lib/zone'
+import ZonePicker from '../components/ZonePicker'
 
 export default function Profile({ dark, onLogout }) {
   const [user, setUser] = useState(null)
   const [seedCount, setSeedCount] = useState(0)
+  const [savingZone, setSavingZone] = useState(false)
+  const [zoneError, setZoneError] = useState('')
+  const { zone, chosen } = readZone(user)
 
   const bg = dark ? '#12130F' : '#F2F0E8'
   const cardBg = dark ? '#1A1C17' : '#FFFFFF'
@@ -21,6 +26,12 @@ export default function Profile({ dark, onLogout }) {
     supabase.from('seeds').select('id', { count: 'exact' }).eq('is_archived', false)
       .then(({ count }) => setSeedCount(count || 0))
   }, [])
+
+  async function changeZone(z) {
+    setSavingZone(true); setZoneError('')
+    try { setUser(await saveZone(z)) } catch { setZoneError('Kunde inte spara zonen. Försök igen.') }
+    setSavingZone(false)
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -52,13 +63,18 @@ export default function Profile({ dark, onLogout }) {
           </div>
         </div>
         <div style={{ borderTop: '0.5px solid ' + border, paddingTop: '16px', display: 'flex', justifyContent: 'space-around' }}>
-          {[[seedCount, 'Frön'], ['2026', 'Säsong'], ['Zon 4', 'Uppsala']].map(([val, lbl]) => (
+          {[[seedCount, 'Frön'], ['2026', 'Säsong'], ['Zon ' + ROMAN[zone], chosen ? 'Odlingszon' : 'Antagen zon']].map(([val, lbl]) => (
             <div key={lbl} style={{ textAlign: 'center' }}>
               <p style={{ margin: '0 0 2px', fontSize: '22px', fontWeight: 500, color: muted, fontFamily: 'Georgia, serif' }}>{val}</p>
               <p style={{ margin: 0, fontSize: '11px', color: muted }}>{lbl}</p>
             </div>
           ))}
         </div>
+      </div>
+      <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
+        <ZonePicker zone={zone} chosen={chosen} onChange={changeZone} saving={savingZone}
+          colors={{ text, muted, border, cardBg, activeBg: iconBg }} />
+        {zoneError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#E24B4A' }}>{zoneError}</p>}
       </div>
       <div style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {menuItems.map((item, i) => (

@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Icon } from '../components/Icon'
 import { callAi } from '../lib/api'
+import { readZone, saveZone, ROMAN } from '../lib/zone'
+import ZonePicker from '../components/ZonePicker'
 
 const PHASE_ICON = { seed: 'seed', seedling: 'seedling', growing: 'grown', mature: 'mature' }
 
@@ -105,10 +107,23 @@ export default function Calendar({ dark }) {
   const [slideDir, setSlideDir] = useState(0)
   const [animKey, setAnimKey] = useState(0)
   const chipsRef = useRef(null)
+  const [user, setUser] = useState(null)
+  const [savingZone, setSavingZone] = useState(false)
+  const { zone, chosen: zoneChosen } = readZone(user)
 
   const season = getSeason(currentMonth)
   const theme = SEASONAL_THEMES[season][dark ? 'dark' : 'light']
   const { bg, cardBg, border, accent, secondary } = theme
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+  }, [])
+
+  async function chooseZone(z) {
+    setSavingZone(true)
+    try { setUser(await saveZone(z)) } catch { /* behåll antagen zon */ }
+    setSavingZone(false)
+  }
 
   useEffect(() => {
     console.log('[Calendar] Laddar frön från Supabase...')
@@ -129,12 +144,12 @@ export default function Calendar({ dark }) {
       return
     }
     fetchAiContent()
-  }, [currentMonth, currentYear, seedsLoaded])
+  }, [currentMonth, currentYear, seedsLoaded, zone])
 
   async function fetchAiContent() {
     // Tipsen sparas per zon och månad på servern och delas mellan alla.
     // Den lokala kopian används bara om servern inte svarar, t.ex. offline.
-    const cacheKey = `groh_calendar_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
+    const cacheKey = `groh_calendar_z${zone}_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
     setLoading(true)
     const body = {
       month: currentMonth,
@@ -213,12 +228,20 @@ export default function Calendar({ dark }) {
           >
             {MONTHS_SV[currentMonth]}
           </h1>
-          <p style={{ fontSize: '12px', color: accent, margin: '4px 0 0', opacity: 0.7 }}>{currentYear}</p>
+          <p style={{ fontSize: '12px', color: accent, margin: '4px 0 0', opacity: 0.7 }}>{currentYear} · Zon {ROMAN[zone]}{zoneChosen ? '' : ' (antagen)'}</p>
         </div>
         <button onClick={() => navigate(1)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: accent, fontSize: 24, lineHeight: 1 }}>›</button>
       </div>
 
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 1 }}>
+
+        {/* Zonval – visas tills användaren har valt sin zon */}
+        {user && !zoneChosen && (
+          <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
+            <ZonePicker zone={zone} chosen={false} onChange={chooseZone} saving={savingZone}
+              colors={{ text: dark ? '#F2F0E8' : '#1E2018', muted: accent, border, cardBg, activeBg: dark ? '#1E3020' : '#E8EDE4' }} />
+          </div>
+        )}
 
         {/* Säsongen */}
         <div key={`season-${animKey}`} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px', animation: 'fadeUp 0.4s ease 0.05s both', transition: 'background 0.5s, border-color 0.5s' }}>

@@ -76,7 +76,7 @@ export default function App() {
         <Icon name={dark ? 'sun' : 'moon'} size={18} color={dark ? '#F2F0E8' : '#1E2018'} />
       </button>
 
-      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} />}
+      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive dark={dark} onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}

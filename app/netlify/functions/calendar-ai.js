@@ -1,6 +1,6 @@
 import { requireUser, readJson, cleanText, json } from '../lib/auth.js'
 import { CALENDAR_MODEL, extractJson } from '../lib/models.js'
-import { dbAvailable, normalizeName, getSeasonTips, getSpeciesTips, saveSeasonTips, saveSpeciesTips } from '../lib/db.js'
+import { useAiQuota, dbAvailable, normalizeName, getSeasonTips, getSpeciesTips, saveSeasonTips, saveSpeciesTips } from '../lib/db.js'
 
 const PHASES = ['seed', 'seedling', 'growing', 'mature']
 const PHASE_SV = { none: 'inte sått än', seed: 'frö, nysått', seedling: 'groddplanta', growing: 'växer', mature: 'fullvuxen' }
@@ -67,8 +67,10 @@ export default async (req) => {
     }
   }
 
-  // 3. Fråga AI:n en gång om allt som saknas.
-  if (!season || missing.length) {
+  // 3. Fråga AI:n en gång om allt som saknas, om dagens tak inte är nått.
+  //    Är taket nått svarar vi med det som redan finns sparat.
+  const limited = (!season || missing.length) && !(await useAiQuota(user?.id))
+  if (!limited && (!season || missing.length)) {
     const parts = [`Det är ${monthName} i odlingszon ${ZONE} enligt Svensk Trädgårds zonkarta (${ZONE_HINT[ZONE]}), Sverige.`, '', 'Svara BARA med giltig JSON:', '{']
     if (!season) {
       parts.push('  "seasonText": "Max 2 meningar som stämningssätter månaden – poetiskt, varmt, lite självironiskt. Inte en lista.",')

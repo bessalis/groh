@@ -53,7 +53,9 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
       setFactStatus(info.status || null)
       setCategory(info.category || null)
       setAiDone(true)
-    } catch { setError('AI-sökning misslyckades. Fyll i manuellt.') }
+    } catch (e) {
+      setError(e.status === 429 ? 'Dagens gräns för AI-uppslag är nådd. Fyll i manuellt eller försök i morgon.' : 'AI-sökning misslyckades. Fyll i manuellt.')
+    }
     setAiLoading(false)
   }
 

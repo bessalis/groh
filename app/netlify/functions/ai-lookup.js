@@ -1,6 +1,6 @@
 import { requireUser, readJson, cleanText, json } from '../lib/auth.js'
 import { LOOKUP_MODEL, extractJson } from '../lib/models.js'
-import { dbAvailable, normalizeName, findFactsByName, findFactsByKey, saveDraft, saveName, getCategories, saveCategories } from '../lib/db.js'
+import { useAiQuota, dbAvailable, normalizeName, findFactsByName, findFactsByKey, saveDraft, saveName, getCategories, saveCategories } from '../lib/db.js'
 import { CATEGORY_KEYS, CATEGORY_GUIDE } from '../lib/categories.js'
 
 const SYSTEM = `Du är en trädgårdsexpert. Användaren anger namnet på en växt inom <växtnamn>-taggar.
@@ -46,7 +46,7 @@ async function savedCategory(key) {
 }
 
 export default async (req) => {
-  const { error } = await requireUser(req)
+  const { error, user } = await requireUser(req)
   if (error) return error
 
   const body = await readJson(req)
@@ -67,7 +67,8 @@ export default async (req) => {
     }
   }
 
-  // 2. Annars frågar vi AI:n en gång.
+  // 2. Annars frågar vi AI:n en gång, om dagens tak inte är nått.
+  if (!(await useAiQuota(user?.id))) return json({ error: 'Dagens gräns för AI-uppslag är nådd. Försök igen i morgon.' }, 429)
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {

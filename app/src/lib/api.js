@@ -14,6 +14,12 @@ export async function callAi(path, body) {
     },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`AI-anropet misslyckades (${res.status})`)
+  if (!res.ok) {
+    let message = `AI-anropet misslyckades (${res.status})`
+    try { message = (await res.json()).error || message } catch { /* inget JSON-svar */ }
+    const err = new Error(message)
+    err.status = res.status
+    throw err
+  }
   return res.json()
 }

@@ -2,6 +2,8 @@
 // Byt här om en modell tas ur bruk; Anthropic svarar då "not_found_error".
 export const LOOKUP_MODEL = 'claude-haiku-5-5'
 export const CALENDAR_MODEL = 'claude-haiku-5-5'
+// Läser fröpåsar från foton (bilder in, JSON ut). Samma lilla modell; byt bara om läsningen blir för dålig.
+export const SCAN_MODEL = 'claude-haiku-5-5'
 
 // Plockar ut JSON-svaret ur ett meddelande från Anthropic. Svaret kan innehålla
 // flera block (t.ex. ett tankeblock först), så vi letar upp textblocken och

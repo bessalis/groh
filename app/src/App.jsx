@@ -1,5 +1,6 @@
 import { Icon } from './components/Icon'
 import AddSeed from './pages/AddSeed'
+import ScanPacket from './pages/ScanPacket'
 import SeedDetail from './pages/SeedDetail'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
@@ -23,6 +24,7 @@ export default function App() {
   const [dark, setDark] = useState(true)
   const [selectedSeed, setSelectedSeed] = useState(null)
   const [addingSeed, setAddingSeed] = useState(false)
+  const [scanning, setScanning] = useState(false)
   const [editingSeed, setEditingSeed] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -52,6 +54,7 @@ export default function App() {
     setPage(target)
     setSelectedSeed(null)
     setAddingSeed(false)
+    setScanning(false)
     setEditingSeed(null)
   }
 
@@ -69,7 +72,7 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-raised)', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
+      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--surface-raised)', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
         <Icon name={dark ? 'sun' : 'moon'} size={18} color="var(--text)" />
       </button>
 
@@ -78,8 +81,11 @@ export default function App() {
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
-      {page === 'seeds' && addingSeed && (
-        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} editSeed={editingSeed} />
+      {page === 'seeds' && addingSeed && scanning && (
+        <ScanPacket onBack={() => setScanning(false)} onManual={() => setScanning(false)} onSaved={() => { setScanning(false); setAddingSeed(false) }} />
+      )}
+      {page === 'seeds' && addingSeed && !scanning && (
+        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={() => setScanning(true)} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
         <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />

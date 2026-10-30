@@ -4,7 +4,7 @@ import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 
-export default function AddSeed({ onBack, onSaved, editSeed }) {
+export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
@@ -99,13 +99,23 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '20px 64px 16px 16px' }}>
-        <Button variant="link" onClick={onBack}>← Tillbaka</Button>
+      {/* Tillbaka till vänster, rubriken i mitten. Höger kolumn lämnar plats åt temaknappen. */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px', padding: '20px 16px 16px' }}>
+        <Button variant="link" onClick={onBack} style={{ justifySelf: 'start' }}>← Tillbaka</Button>
         <h1 style={{ fontSize: 'var(--display-s)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
-        <Button variant="link" onClick={handleSave} disabled={saving}>{saving ? 'Sparar…' : 'Spara'}</Button>
+        <span aria-hidden="true" />
       </div>
 
       <div style={{ padding: '0 16px' }}>
+        {!editSeed && onScan && (
+          <button type="button" className="card card--soft" onClick={onScan} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <span style={{ flex: 1 }}>
+              <span className="t-heading-s" style={{ display: 'block' }}>Fotografera fröpåsen</span>
+              <span className="t-caption" style={{ display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
+            </span>
+            <span aria-hidden="true" style={{ color: 'var(--text-muted)', fontSize: '18px' }}>›</span>
+          </button>
+        )}
         <SectionLabel>Namn</SectionLabel>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <input value={name} onChange={e => { setName(e.target.value); setAiDone(false) }} placeholder="t.ex. Luktärt Cupani" style={{ ...inputStyle, flex: 1 }} />

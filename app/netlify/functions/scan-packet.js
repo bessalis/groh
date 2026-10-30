@@ -31,6 +31,7 @@ Svara BARA med JSON i exakt det här formatet:
   "frost_sensitive": true om påsen säger att växten inte tål frost, false om den tål frost, annars null,
   "pretreatment_note": "förbehandling som påsen anger, t.ex. blötlägg 24 timmar, eller null",
   "sowing_note": "annan viktig såinformation från påsen, högst två meningar, eller null",
+  "back_matches": true om baksidan tydligt hör till samma påse som framsidan (samma fröfirma, design eller växt), false om den tydligt hör till en annan påse, null om det inte går att avgöra eller om det inte finns någon baksida,
   "uncertain": ["namn på fält du är osäker på, t.ex. för att texten är suddig"]
 }`
 
@@ -85,6 +86,7 @@ export function toReading(ai) {
     pretreatment_note: text(ai.pretreatment_note, 300),
     sowing_note: text(ai.sowing_note, 400),
   }
+  reading.back_matches = bool(ai.back_matches)
   reading.uncertain = Array.isArray(ai.uncertain) ? ai.uncertain.filter(f => FIELDS.includes(f)) : []
   return reading
 }
@@ -103,7 +105,7 @@ export default async (req) => {
 
   const content = [
     { type: 'text', text: 'Framsidan:' }, front,
-    ...(back ? [{ type: 'text', text: 'Baksidan:' }, back] : []),
+    ...(back ? [{ type: 'text', text: 'Baksidan:' }, back] : [{ type: 'text', text: '(Ingen baksida.)' }]),
     { type: 'text', text: 'Läs av påsen.' },
   ]
 

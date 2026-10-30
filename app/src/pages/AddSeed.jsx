@@ -4,8 +4,9 @@ import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 import { Icon } from '../components/Icon'
+import { findOpenScan } from '../lib/scan'
 
-export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
+export default function AddSeed({ onBack, onSaved, onScan, onBatch, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
@@ -24,6 +25,9 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [factStatus, setFactStatus] = useState(null)
   const [category, setCategory] = useState(null)
   const [error, setError] = useState('')
+
+  const [openScan, setOpenScan] = useState(null)
+  useEffect(() => { if (!editSeed) findOpenScan().then(setOpenScan).catch(() => {}) }, [editSeed])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -109,13 +113,33 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
 
       <div style={{ padding: '0 16px' }}>
         {!editSeed && onScan && (
-          <button type="button" className="action-tile action-tile--wide" onClick={onScan} style={{ marginBottom: '20px' }}>
-            <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
-            <span className="action-tile__text">
-              <span>Fotografera fröpåsen</span>
-              <span className="action-tile__sub">AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
-            </span>
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            {openScan && onBatch && (
+              <button type="button" className="action-tile action-tile--wide" onClick={() => onBatch(openScan.id)}>
+                <span className="action-tile__icon" aria-hidden="true">↻</span>
+                <span className="action-tile__text">
+                  <span>Fortsätt skanningen</span>
+                  <span className="action-tile__sub">{openScan.left === 1 ? 'En påse' : `${openScan.left} påsar`} kvar att granska och spara.</span>
+                </span>
+              </button>
+            )}
+            <button type="button" className="action-tile action-tile--wide" onClick={onScan}>
+              <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
+              <span className="action-tile__text">
+                <span>Fotografera fröpåsen</span>
+                <span className="action-tile__sub">AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
+              </span>
+            </button>
+            {onBatch && (
+              <button type="button" className="action-tile action-tile--wide" onClick={() => onBatch(null)}>
+                <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
+                <span className="action-tile__text">
+                  <span>Skanna flera påsar</span>
+                  <span className="action-tile__sub">Upp till 12 på en gång. Fota framsidorna, vänd påsarna och fota baksidorna.</span>
+                </span>
+              </button>
+            )}
+          </div>
         )}
         <SectionLabel>Namn</SectionLabel>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>

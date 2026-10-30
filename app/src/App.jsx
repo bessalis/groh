@@ -12,7 +12,6 @@ import { supabase } from './lib/supabase'
 import './styles/tokens.css'
 
 // Skanningen laddas först när den öppnas, så att startsidan förblir lätt.
-const ScanPacket = lazy(() => import('./pages/ScanPacket'))
 const BatchScan = lazy(() => import('./pages/BatchScan'))
 
 const NAV_ITEMS = [
@@ -27,7 +26,7 @@ export default function App() {
   const [dark, setDark] = useState(true)
   const [selectedSeed, setSelectedSeed] = useState(null)
   const [addingSeed, setAddingSeed] = useState(false)
-  const [scanning, setScanning] = useState(null)   // null | { mode: 'single' } | { mode: 'batch', resumeId }
+  const [scanning, setScanning] = useState(null)   // null | { resumeId }
   const [editingSeed, setEditingSeed] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -85,15 +84,12 @@ export default function App() {
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
       <Suspense fallback={<div role="status" className="t-body" style={{ padding: '32px 16px', textAlign: 'center' }}>Öppnar kameran…</div>}>
-      {page === 'seeds' && addingSeed && scanning?.mode === 'single' && (
-        <ScanPacket onBack={() => setScanning(null)} onManual={() => setScanning(null)} onSaved={() => { setScanning(null); setAddingSeed(false) }} />
-      )}
-      {page === 'seeds' && addingSeed && scanning?.mode === 'batch' && (
+      {page === 'seeds' && addingSeed && scanning && (
         <BatchScan key={scanning.resumeId || 'new'} resumeScanId={scanning.resumeId} onBack={() => setScanning(null)} onSaved={() => { setScanning(null); setAddingSeed(false) }} />
       )}
       </Suspense>
       {page === 'seeds' && addingSeed && !scanning && (
-        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={() => setScanning({ mode: 'single' })} onBatch={resumeId => setScanning({ mode: 'batch', resumeId })} editSeed={editingSeed} />
+        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={resumeId => setScanning({ resumeId })} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
         <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />

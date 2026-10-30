@@ -172,6 +172,7 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
   async function readOne(scanId, item) {
     patch(item.position, { readState: 'reading', error: '' })
     let { frontPath, backPath } = item
+    let ok = false
     try {
       const front = item.front?.base64 ? item.front : await downloadPhoto(item.frontPath)
       const back = item.back ? (item.back.base64 ? item.back : await downloadPhoto(item.backPath)) : null
@@ -185,6 +186,7 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
         front_photo_path: frontPath, back_photo_path: backPath,
         ai_status: 'read', ai_reading: result.reading, model: result.model, status: 'pending',
       })
+      ok = true
       patch(item.position, {
         itemId, reading: result.reading, readState: 'read', form: toForm(result.reading), reviewed: false,
         front: { ...front, preview: previewOf(item.front) }, back: back ? { ...back, preview: previewOf(item.back) } : null,
@@ -200,23 +202,27 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
       }
       if (e?.status === 429) throw e   // taket är nått: ingen idé att fortsätta med resten
     }
+    return ok
   }
 
   async function readAll(list = items) {
     setStep('reading'); setError('')
+    let readOk = []
     try {
       const scanId = scanIdRef.current || await startScan()
       scanIdRef.current = scanId
       const queue = [...list]
       const workers = Array.from({ length: PARALLEL }, async () => {
-        while (queue.length) await readOne(scanId, queue.shift())
+        while (queue.length) readOk.push(await readOne(scanId, queue.shift()))
       })
       await Promise.all(workers)
     } catch (e) {
       if (e?.status === 429) setError(errorText(e))
     }
     if (scanIdRef.current) await setScanStatus(scanIdRef.current, 'reviewing').catch(() => {})
-    setStep('list')
+    // En enda påse som gick att läsa: direkt till granskningen, utan listan emellan.
+    if (list.length === 1 && readOk[0]) { setEditIndex(0); setStep('edit') }
+    else setStep('list')
   }
 
   async function reread(item) {
@@ -293,13 +299,6 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
     onBack && onBack()
   }
 
-  const header = (title, back = cancel) => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px', padding: '20px 16px 16px' }}>
-      <Button variant="link" onClick={back} style={{ justifySelf: 'start' }}>← Tillbaka</Button>
-      <h1 className="t-display-s" style={{ margin: 0 }}>{title}</h1>
-      <span aria-hidden="true" />
-    </div>
-  )
 
   const page = { minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(150px + env(safe-area-inset-bottom))' }
   const bottomBar = { position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 'min(358px, calc(100% - 32px))', display: 'flex', gap: '8px' }
@@ -309,20 +308,32 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
     const it = items[editIndex]
     const setForm = updater => patch(it.position, { form: typeof updater === 'function' ? updater(it.form) : updater })
     const unsure = uncertainLabels(it.reading)
+    const dup = duplicateOf(it)
+    const only = items.length === 1          // en påse: spara direkt härifrån
     const done = () => { patch(it.position, { reviewed: true }); setEditIndex(null); setStep('list') }
+    const submit = () => (only ? saveAll() : done())
     return (
       <div style={page}>
-        {header(`Påse ${it.position}`, done)}
-        <form style={{ padding: '0 16px' }} onSubmit={e => { e.preventDefault(); done() }} noValidate>
+        <PageHeader title={only ? 'Granska påsen' : `Påse ${it.position}`} onBack={only ? cancel : done} />
+        <form style={{ padding: '0 16px' }} onSubmit={e => { e.preventDefault(); submit() }} noValidate>
           <AiNote box style={{ marginBottom: '16px' }}>
             AI har läst av påsen. Granska och rätta innan du sparar.
             {unsure.length > 0 && <><br /><strong>Kontrollera särskilt:</strong> {unsure.join(', ')}.</>}
           </AiNote>
           <Thumbs front={it.front} back={it.back} />
+          {dup.existing && (
+            <div style={{ marginTop: '16px' }}>
+              <DuplicateChoice existing={dup.existing} choice={dup.choice} onChoose={c => patch(it.position, { choice: c })}
+                patch={mergePatch(dup.existing, seedFrom(toValues(it.form), it.amount, { frontPath: it.frontPath, backPath: it.backPath }))} />
+            </div>
+          )}
+          {error && <p className="t-small" role="alert" style={{ color: 'var(--danger-text)', margin: '12px 0 0' }}>{error}</p>}
           <div style={{ height: '20px' }} />
           <PacketForm form={it.form} setForm={setForm} amount={it.amount} setAmount={a => patch(it.position, { amount: a })} uncertain={it.reading?.uncertain} />
           <div style={bottomBar}>
-            <Button variant="primary" large full type="submit">Klar med påsen</Button>
+            <Button variant="primary" large full type="submit" disabled={saving}>
+              {!only ? 'Klar med påsen' : saving ? 'Sparar…' : dup.existing && dup.choice === 'merge' ? 'Komplettera fröet' : 'Spara fröet'}
+            </Button>
           </div>
         </form>
       </div>
@@ -331,7 +342,7 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
 
   return (
     <div style={page}>
-      {header(step === 'list' ? 'Granska påsarna' : 'Skanna flera')}
+      <PageHeader title={step === 'list' ? 'Granska påsarna' : 'Fotografera'} onBack={cancel} />
       <div style={{ padding: '0 16px' }}>
         {error && <p className="t-small" role="alert" style={{ color: 'var(--danger-text)', margin: '0 0 12px' }}>{error}</p>}
 
@@ -344,8 +355,8 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
         {step === 'group-front' && !group && (
           <PhotoCard
             label="Steg 1 av 2"
-            title="Fota alla framsidor"
-            hint="Lägg ut upp till 12 påsar med framsidan upp, utan att de överlappar, och fota alla på en gång. Bra ljus och lite avstånd mellan påsarna hjälper."
+            title="Fota framsidorna"
+            hint="En påse eller flera, upp till 12. Lägg dem med framsidan upp utan att de överlappar och fota alla på samma bild. Bra ljus och lite avstånd mellan påsarna hjälper."
             onFiles={f => detectGroup(f?.[0], 'front')}
           >
             <Button variant="link" onClick={() => setStep('fronts')} style={{ marginTop: '12px' }}>Fota påse för påse i stället</Button>
@@ -355,11 +366,13 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
         {step === 'group-back' && !group && (
           <PhotoCard
             label={`Steg 2 av 2 · ${items.length} ${items.length === 1 ? 'påse' : 'påsar'}`}
-            title="Vänd påsarna där de ligger"
-            hint="Vänd varje påse på samma plats, så att baksidan hamnar där framsidan låg. Fota sedan alla baksidor på en gång."
+            title={items.length === 1 ? 'Vänd påsen där den ligger' : 'Vänd påsarna där de ligger'}
+            hint={items.length === 1
+              ? 'Baksidan har oftast såtid, sådjup och groningstid. Vänd påsen och fota baksidan.'
+              : 'Vänd varje påse på samma plats, så att baksidan hamnar där framsidan låg. Fota sedan alla baksidor på samma bild.'}
             onFiles={f => detectGroup(f?.[0], 'back')}
             onSkip={() => readAll(items)}
-            skipLabel="Påsarna har inga baksidor att läsa"
+            skipLabel={items.length === 1 ? 'Påsen har ingen baksida att läsa' : 'Påsarna har inga baksidor att läsa'}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: '6px', marginTop: '16px' }}>
               {items.map(it => <img key={it.position} src={previewOf(it.front)} alt={`Påse ${it.position}, framsidan`} style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: '6px' }} />)}
@@ -508,6 +521,16 @@ function GroupReview({ group, frontCount, pairs, onRetake, onConfirm, onSingle }
         <Button full disabled={busy} onClick={onRetake}>Ta om fotot</Button>
         {onSingle && status !== 'detecting' && <Button variant="link" onClick={onSingle}>Fota påse för påse i stället</Button>}
       </div>
+    </div>
+  )
+}
+
+function PageHeader({ title, onBack }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px', padding: '20px 16px 16px' }}>
+      <Button variant="link" onClick={onBack} style={{ justifySelf: 'start' }}>← Tillbaka</Button>
+      <h1 className="t-display-s" style={{ margin: 0 }}>{title}</h1>
+      <span aria-hidden="true" />
     </div>
   )
 }

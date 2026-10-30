@@ -6,7 +6,7 @@ import { Button, SectionLabel, AiNote } from '../components/ui'
 import { Icon } from '../components/Icon'
 import { findOpenScan } from '../lib/scan'
 
-export default function AddSeed({ onBack, onSaved, onScan, onBatch, editSeed }) {
+export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
@@ -114,8 +114,8 @@ export default function AddSeed({ onBack, onSaved, onScan, onBatch, editSeed }) 
       <div style={{ padding: '0 16px' }}>
         {!editSeed && onScan && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            {openScan && onBatch && (
-              <button type="button" className="action-tile action-tile--wide" onClick={() => onBatch(openScan.id)}>
+            {openScan && (
+              <button type="button" className="action-tile action-tile--wide" onClick={() => onScan(openScan.id)}>
                 <span className="action-tile__icon" aria-hidden="true">↻</span>
                 <span className="action-tile__text">
                   <span>Fortsätt skanningen</span>
@@ -123,22 +123,13 @@ export default function AddSeed({ onBack, onSaved, onScan, onBatch, editSeed }) 
                 </span>
               </button>
             )}
-            <button type="button" className="action-tile action-tile--wide" onClick={onScan}>
+            <button type="button" className="action-tile action-tile--wide" onClick={() => onScan(null)}>
               <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
               <span className="action-tile__text">
-                <span>Fotografera fröpåsen</span>
-                <span className="action-tile__sub">AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
+                <span>Fotografera fröpåsar</span>
+                <span className="action-tile__sub">En påse eller flera på samma bild, upp till 12. AI läser av namn, sort och såinfo, och du granskar innan något sparas.</span>
               </span>
             </button>
-            {onBatch && (
-              <button type="button" className="action-tile action-tile--wide" onClick={() => onBatch(null)}>
-                <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
-                <span className="action-tile__text">
-                  <span>Skanna flera påsar</span>
-                  <span className="action-tile__sub">Upp till 12 på en gång. Fota framsidorna, vänd påsarna och fota baksidorna.</span>
-                </span>
-              </button>
-            )}
           </div>
         )}
         <SectionLabel>Namn</SectionLabel>

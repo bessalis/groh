@@ -3,10 +3,11 @@ import { Button, SectionLabel, AiNote } from '../components/ui'
 import PacketForm from '../components/PacketForm'
 import DuplicateChoice from '../components/DuplicateChoice'
 import { findDuplicate, defaultChoice, mergePatch, norm } from '../lib/duplicates'
-import { compressPhoto } from '../lib/photo'
+import { compressPhoto, loadSource, forDetection, cropPhoto } from '../lib/photo'
+import { readingOrder, pairByPosition } from '../lib/pairing'
 import {
   startScan, uploadPhoto, readPacket, saveItem, updateItem, confirmPacket,
-  setScanStatus, abandonScan, loadScanItems, downloadPhoto, loadMySeeds,
+  setScanStatus, abandonScan, loadScanItems, downloadPhoto, loadMySeeds, detectPackets,
 } from '../lib/scan'
 import { toForm, toValues, errorText, seedFrom, uncertainLabels } from '../lib/scanForm'
 
@@ -28,7 +29,10 @@ function newItem(position, front) {
 const previewOf = side => side?.preview || side?.url || null
 
 export default function BatchScan({ resumeScanId, onBack, onSaved }) {
-  const [step, setStep] = useState(resumeScanId ? 'loading' : 'fronts')   // fronts | backs | reading | list | edit | loading | error
+  // group-front | group-back: alla påsar på ett foto (standard). fronts | backs: en påse i taget.
+  const [step, setStep] = useState(resumeScanId ? 'loading' : 'group-front')   // … | reading | list | edit | loading | error
+  const [group, setGroup] = useState(null)        // gruppfotot som granskas: { side, url, source, boxes, status, error }
+  const [frontBoxes, setFrontBoxes] = useState([])   // framsidornas rutor, för att para ihop baksidorna
   const [items, setItems] = useState([])
   const [backIndex, setBackIndex] = useState(0)
   const [editIndex, setEditIndex] = useState(null)
@@ -87,6 +91,73 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
       }
     } catch {
       setError('Fotot kunde inte läsas. Prova att ta det igen.')
+    }
+  }
+
+  // ── Gruppfoto: alla påsar på ett foto ──
+  function closeGroup() {
+    group?.source?.close?.()
+    setGroup(null)
+  }
+
+  async function detectGroup(file, side) {
+    if (!file) return
+    closeGroup(); setError('')
+    const url = URL.createObjectURL(file)
+    previewsRef.current.push(url)
+    setGroup({ side, url, status: 'detecting', boxes: [] })
+    try {
+      const source = await loadSource(file)
+      const small = await forDetection(source)
+      const { packets } = await detectPackets(small)
+      const boxes = side === 'front' ? readingOrder(packets) : packets
+      setGroup({ side, url, source, boxes, status: 'ready' })
+    } catch (e) {
+      console.error('Kunde inte hitta påsarna', e)
+      setGroup({ side, url, boxes: [], status: 'error', error: errorText(e) })
+    }
+  }
+
+  // Framsidorna stämmer: klipp ut varje påse ur originalfotot och gå vidare till baksidorna.
+  async function confirmFronts() {
+    setGroup(g => ({ ...g, status: 'cropping' }))
+    try {
+      const photos = []
+      for (const box of group.boxes) {
+        const photo = await cropPhoto(group.source, box)
+        photo.preview = URL.createObjectURL(photo.blob)
+        previewsRef.current.push(photo.preview)
+        photos.push(photo)
+      }
+      setFrontBoxes(group.boxes)
+      setItems(photos.map((p, i) => newItem(i + 1, p)))
+      closeGroup()
+      setStep('group-back')
+    } catch {
+      setError('Påsarna kunde inte klippas ut. Prova att ta fotot igen.')
+      setGroup(g => ({ ...g, status: 'ready' }))
+    }
+  }
+
+  // Baksidorna stämmer: para ihop efter läge, klipp ut och läs alla påsar.
+  async function confirmBacks() {
+    setGroup(g => ({ ...g, status: 'cropping' }))
+    try {
+      const pairs = pairByPosition(frontBoxes, group.boxes)
+      const list = []
+      for (let i = 0; i < items.length; i++) {
+        if (pairs[i] === null) { list.push(items[i]); continue }
+        const photo = await cropPhoto(group.source, group.boxes[pairs[i]])
+        photo.preview = URL.createObjectURL(photo.blob)
+        previewsRef.current.push(photo.preview)
+        list.push({ ...items[i], back: photo })
+      }
+      closeGroup()
+      setItems(list)
+      readAll(list)
+    } catch {
+      setError('Baksidorna kunde inte klippas ut. Prova att ta fotot igen.')
+      setGroup(g => ({ ...g, status: 'ready' }))
     }
   }
 
@@ -270,6 +341,43 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
           <div className="card card--roomy"><Button onClick={onBack}>Tillbaka</Button></div>
         )}
 
+        {step === 'group-front' && !group && (
+          <PhotoCard
+            label="Steg 1 av 2"
+            title="Fota alla framsidor"
+            hint="Lägg ut upp till 12 påsar med framsidan upp, utan att de överlappar, och fota alla på en gång. Bra ljus och lite avstånd mellan påsarna hjälper."
+            onFiles={f => detectGroup(f?.[0], 'front')}
+          >
+            <Button variant="link" onClick={() => setStep('fronts')} style={{ marginTop: '12px' }}>Fota påse för påse i stället</Button>
+          </PhotoCard>
+        )}
+
+        {step === 'group-back' && !group && (
+          <PhotoCard
+            label={`Steg 2 av 2 · ${items.length} ${items.length === 1 ? 'påse' : 'påsar'}`}
+            title="Vänd påsarna där de ligger"
+            hint="Vänd varje påse på samma plats, så att baksidan hamnar där framsidan låg. Fota sedan alla baksidor på en gång."
+            onFiles={f => detectGroup(f?.[0], 'back')}
+            onSkip={() => readAll(items)}
+            skipLabel="Påsarna har inga baksidor att läsa"
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: '6px', marginTop: '16px' }}>
+              {items.map(it => <img key={it.position} src={previewOf(it.front)} alt={`Påse ${it.position}, framsidan`} style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: '6px' }} />)}
+            </div>
+          </PhotoCard>
+        )}
+
+        {group && (
+          <GroupReview
+            group={group}
+            frontCount={items.length}
+            pairs={group.side === 'back' && group.status === 'ready' ? pairByPosition(frontBoxes, group.boxes) : null}
+            onRetake={closeGroup}
+            onConfirm={group.side === 'front' ? confirmFronts : confirmBacks}
+            onSingle={group.side === 'front' ? () => { closeGroup(); setStep('fronts') } : null}
+          />
+        )}
+
         {step === 'fronts' && (
           <PhotoCard
             label={`Steg 1 av 2 · ${items.length} av ${MAX}`}
@@ -339,6 +447,66 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Gruppfotot med numrerade rutor runt påsarna, så att användaren ser vad AI:n hittade.
+function GroupReview({ group, frontCount, pairs, onRetake, onConfirm, onSingle }) {
+  const { side, url, boxes, status, error } = group
+  const busy = status === 'detecting' || status === 'cropping'
+  // Baksidor numreras efter framsidan de parats ihop med.
+  const numberFor = j => {
+    if (side === 'front') return j + 1
+    const i = pairs ? pairs.indexOf(j) : -1
+    return i >= 0 ? i + 1 : null
+  }
+  const missing = pairs ? pairs.map((p, i) => (p === null ? i + 1 : null)).filter(Boolean) : []
+  return (
+    <div className="card card--roomy">
+      <SectionLabel>{side === 'front' ? 'Framsidorna' : 'Baksidorna'}</SectionLabel>
+      <div style={{ position: 'relative', margin: '0 0 14px', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+        <img src={url} alt={side === 'front' ? 'Gruppfoto av framsidorna' : 'Gruppfoto av baksidorna'} style={{ width: '100%', display: 'block' }} />
+        {boxes.map((b, j) => {
+          const n = numberFor(j)
+          return (
+            <div key={j} aria-hidden="true" style={{
+              position: 'absolute', left: `${b.x0 * 100}%`, top: `${b.y0 * 100}%`, width: `${(b.x1 - b.x0) * 100}%`, height: `${(b.y1 - b.y0) * 100}%`,
+              border: `3px solid ${n ? 'var(--accent)' : 'var(--danger)'}`, borderRadius: '6px', boxSizing: 'border-box',
+            }}>
+              <span className="t-label" style={{ position: 'absolute', top: '4px', left: '4px', minWidth: '24px', padding: '4px 6px', borderRadius: '6px', textAlign: 'center',
+                background: n ? 'var(--accent)' : 'var(--danger)', color: n ? 'var(--on-accent)' : 'var(--on-danger)', letterSpacing: 0 }}>{n ?? '?'}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div role="status" aria-live="polite">
+        {status === 'detecting' && <p className="t-body" style={{ margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '10px' }}><span className="spinner" aria-hidden="true" style={{ width: 20, height: 20 }} />Letar efter påsarna…</p>}
+        {status === 'cropping' && <p className="t-body" style={{ margin: '0 0 12px' }}>Klipper ut påsarna…</p>}
+        {status === 'error' && <p className="t-body" role="alert" style={{ margin: '0 0 12px', color: 'var(--danger-text)' }}>{error}</p>}
+        {status === 'ready' && side === 'front' && (
+          <p className="t-body" style={{ margin: '0 0 12px' }}>
+            {boxes.length === 0 ? 'Hittade inga påsar. Prova att fota lite närmare eller i bättre ljus.'
+              : `Hittade ${boxes.length === 1 ? 'en påse' : `${boxes.length} påsar`}. Har alla en egen ruta?`}
+          </p>
+        )}
+        {status === 'ready' && side === 'back' && (
+          <p className="t-body" style={{ margin: '0 0 12px' }}>
+            Hittade {boxes.length} {boxes.length === 1 ? 'baksida' : 'baksidor'} till {frontCount} {frontCount === 1 ? 'påse' : 'påsar'}.
+            {missing.length > 0 && <> {missing.length === 1 ? `Påse ${missing[0]} får` : `Påsarna ${missing.join(', ')} får`} ingen baksida.</>}
+            {boxes.some((_, j) => numberFor(j) === null) && <> Rutor med frågetecken kunde inte paras ihop.</>}
+          </p>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {status === 'ready' && boxes.length > 0 && (
+          <Button variant="primary" large full onClick={onConfirm}>{side === 'front' ? 'Stämmer, fortsätt' : 'Stämmer, läs påsarna'}</Button>
+        )}
+        <Button full disabled={busy} onClick={onRetake}>Ta om fotot</Button>
+        {onSingle && status !== 'detecting' && <Button variant="link" onClick={onSingle}>Fota påse för påse i stället</Button>}
       </div>
     </div>
   )

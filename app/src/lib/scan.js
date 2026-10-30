@@ -147,3 +147,8 @@ export async function downloadPhoto(path) {
   })
   return { blob: data, type: data.type || (path.endsWith('.webp') ? 'image/webp' : 'image/jpeg'), base64 }
 }
+
+/** Hittar påsarna i ett gruppfoto. Returnerar { packets: [{ x0, y0, x1, y1, label }] }. */
+export function detectPackets(photo) {
+  return callAi('/api/detect-packets', { image: { type: photo.type, data: photo.base64 } })
+}

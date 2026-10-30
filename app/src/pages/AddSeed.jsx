@@ -99,10 +99,11 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '20px 64px 16px 16px' }}>
-        <Button variant="link" onClick={onBack}>← Tillbaka</Button>
+      {/* Tillbaka till vänster, rubriken i mitten. Höger kolumn lämnar plats åt temaknappen. */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px', padding: '20px 16px 16px' }}>
+        <Button variant="link" onClick={onBack} style={{ justifySelf: 'start' }}>← Tillbaka</Button>
         <h1 style={{ fontSize: 'var(--display-s)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
-        <Button variant="link" onClick={handleSave} disabled={saving}>{saving ? 'Sparar…' : 'Spara'}</Button>
+        <span aria-hidden="true" />
       </div>
 
       <div style={{ padding: '0 16px' }}>

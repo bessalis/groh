@@ -72,7 +72,7 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-raised)', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
+      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--surface-raised)', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
         <Icon name={dark ? 'sun' : 'moon'} size={18} color="var(--text)" />
       </button>
 

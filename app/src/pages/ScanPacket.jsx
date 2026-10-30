@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 import { compressPhoto } from '../lib/photo'
-import { startScan, uploadPhoto, readPacket, saveItem, confirmPacket, abandonScan } from '../lib/scan'
+import { startScan, uploadPhoto, readPacket, saveItem, confirmPacket, abandonScan, loadMySeeds } from '../lib/scan'
 import { EMPTY, toForm, toValues, errorText, seedFrom, uncertainLabels } from '../lib/scanForm'
 import PacketForm from '../components/PacketForm'
+import DuplicateChoice from '../components/DuplicateChoice'
+import { findDuplicate, defaultChoice, mergePatch } from '../lib/duplicates'
 
 // Skanna en fröpåse: framsida, baksida (valfri), AI läser av, användaren granskar
 // och rättar, sedan sparas fröet. Inget sparas som frö förrän användaren bekräftat.
@@ -17,6 +19,10 @@ export default function ScanPacket({ onBack, onSaved, onManual }) {
   const [amount, setAmount] = useState(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [mySeeds, setMySeeds] = useState([])
+  const [choices, setChoices] = useState({})       // frö-id → 'merge' | 'new'
+
+  useEffect(() => { loadMySeeds().then(setMySeeds).catch(() => {}) }, [])
   const scanIdRef = useRef(null)
   const savedRef = useRef(false)
   const previewsRef = useRef([])
@@ -66,13 +72,18 @@ export default function ScanPacket({ onBack, onSaved, onManual }) {
     }
   }
 
+  // Finns växten redan? Räknas om när namn, sort eller latinskt namn ändras i formuläret.
+  const values = useMemo(() => toValues(form), [form])
+  const duplicate = useMemo(() => findDuplicate(values, mySeeds), [values, mySeeds])
+  const choice = duplicate ? (choices[duplicate.id] ?? defaultChoice(duplicate)) : 'new'
+  const merging = duplicate && choice === 'merge'
+
   async function save() {
-    const values = toValues(form)
     if (!values.name) { setError('Fröet behöver ett namn.'); return }
     setSaving(true); setError('')
     const seed = seedFrom(values, amount, scan.paths)
     try {
-      await confirmPacket({ scanId: scan.scanId, itemId: scan.itemId, seed, reading: scan.reading, final: values })
+      await confirmPacket({ scanId: scan.scanId, itemId: scan.itemId, seed, reading: scan.reading, final: values, mergeInto: merging ? duplicate : null })
       savedRef.current = true
       onSaved && onSaved()
     } catch {
@@ -138,13 +149,20 @@ export default function ScanPacket({ onBack, onSaved, onManual }) {
             </AiNote>
             <Thumbs front={front} back={back} />
 
+            {duplicate && (
+              <div style={{ marginTop: '16px' }}>
+                <DuplicateChoice existing={duplicate} choice={choice} onChoose={c => setChoices(prev => ({ ...prev, [duplicate.id]: c }))}
+                  patch={mergePatch(duplicate, seedFrom(values, amount, scan?.paths))} />
+              </div>
+            )}
+
             <PacketForm form={form} setForm={setForm} amount={amount} setAmount={setAmount} uncertain={scan?.reading?.uncertain} />
 
             {error && <p className="t-small" role="alert" style={{ color: 'var(--danger-text)', margin: '8px 0 0' }}>{error}</p>}
 
             <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 'min(358px, calc(100% - 32px))', display: 'flex', gap: '8px' }}>
               <Button large onClick={onBack} style={{ flex: 1, background: 'var(--surface)' }}>Avbryt</Button>
-              <Button variant="primary" large type="submit" disabled={saving} style={{ flex: 2 }}>{saving ? 'Sparar…' : 'Spara fröet'}</Button>
+              <Button variant="primary" large type="submit" disabled={saving} style={{ flex: 2 }}>{saving ? 'Sparar…' : merging ? 'Komplettera fröet' : 'Spara fröet'}</Button>
             </div>
           </form>
         )}

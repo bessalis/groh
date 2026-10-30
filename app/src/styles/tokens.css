@@ -22,8 +22,96 @@
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  --border: 0.5px solid var(--salvia-200);
+  /* ── Rolltokens ───────────────────────────────────────────────────────────
+     Använd dessa i komponenterna, inte råpaletten ovan. Ljust läge är standard,
+     mörkt läge skriver över under [data-theme="dark"] (sätts av App.jsx).
+     All text ska klara WCAG AA (4,5:1) mot --bg och --surface i båda lägena. */
+
+  /* Ytor */
+  --bg:              var(--paper-dark);  /* sidans bakgrund */
+  --surface:         #FFFFFF;            /* kort, fält */
+  --surface-muted:   #F6F4EC;            /* bildplats, fasrutor, inaktiva rutor */
+  --surface-raised:  #E8E4DA;            /* runda knappar, platshållare */
+  --border-color:    #E3DFD4;
+  --border:          0.5px solid var(--border-color);
+
+  /* Text */
+  --text:            #1E2018;
+  --text-muted:      var(--salvia-600);  /* etiketter, datum. 5,1:1 mot --bg */
+  --text-subtle:     #75836B;            /* inaktiv meny med ikon. 3,5:1 */
+  --text-accent:     #3B5E35;            /* aktivt menyval, länkar */
+
+  /* Salvia som accent */
+  --accent:          #3B5E35;            /* primär knapp */
+  --on-accent:       #FFFFFF;
+  --accent-soft:     #E8EDE4;            /* aktiv rad, AI-ruta */
+  --accent-selected: #D4E4CC;            /* valt chip eller alternativ */
+  --accent-border:   #C0D0B8;
+  --accent-icon-bg:  #EDF2EA;            /* ruta bakom ikoner */
+
+  /* Status */
+  --danger:          #C0392B;            /* ta bort-knapp, vit text 5,4:1 */
+  --on-danger:       #FFFFFF;
+  --danger-text:     #A03030;
+  --warn-text:       #A03030;            /* frostkänslig */
+  --warn-bg:         #FFF0E8;
+  --warn-border:     #E8B8A8;
+  --info-text:       #534AB7;            /* förbehandling */
+  --info-bg:         #F0EEFF;
+  --info-border:     #CECBF6;
+  --warm-text:       #7A4E1A;            /* varma etiketter, t.ex. Komposten */
+  --warm-bg:         #F5ECD8;
+
+  /* Salviakort på startsidan (snabbval, höstbokslut). Samma i båda lägena. */
+  --feature-bg:        #808F73;
+  --feature-bg-strong: #7A896E;
+  --feature-bg-light:  var(--paper-dark);
+  --on-feature:        #11171F;            /* 5,6:1 mot --feature-bg */
+
+  --scrim:           rgba(0, 0, 0, 0.45);   /* bakom ljus text över bilder */
 }
+
+[data-theme="dark"] {
+  --bg:              #12130F;
+  --surface:         #1A1C17;
+  --surface-muted:   #22251E;
+  --surface-raised:  #2A2E24;
+  --border-color:    #2A2E24;
+
+  --text:            var(--paper-dark);
+  --text-muted:      var(--salvia-400);  /* 6,2:1 */
+  --text-subtle:     #808F73;            /* 5,4:1 */
+  --text-accent:     #9DBA92;            /* 8:1 */
+
+  --accent:          var(--salvia-600);
+  --accent-soft:     #1E3020;
+  --accent-selected: #2A4030;
+  --accent-border:   #2A3828;
+  --accent-icon-bg:  #1E2A1A;
+
+  --danger-text:     #E28080;
+  --warn-text:       #E28080;
+  --warn-bg:         #301010;
+  --warn-border:     #7A2020;
+  --info-text:       #9F99CC;
+  --info-bg:         #1E1A30;
+  --info-border:     #534AB7;
+  --warm-text:       var(--warm-200);
+  --warm-bg:         #2A2418;
+
+  --scrim:           rgba(0, 0, 0, 0.5);
+}
+
+/* Kalenderns årstider skriver bara över ytor, kant och accent. */
+[data-season] { --border: 0.5px solid var(--border-color); }
+[data-season="winter"] { --bg: #EEF1F2; --border-color: #C8D4D8; --season-accent: #4C6E7A; --season-secondary: #5B7E8A; }
+[data-season="spring"] { --bg: #F0F4EE; --border-color: #C4D4BE; --season-accent: #4E7244; --season-secondary: #557A4B; }
+[data-season="summer"] { --bg: #F2F3EC; --border-color: #CCCEA8; --season-accent: #5E7030; --season-secondary: #627536; }
+[data-season="autumn"] { --bg: #F3F0EC; --border-color: #D4C8B8; --season-accent: #7A5A30; --season-secondary: #82633A; }
+[data-theme="dark"] [data-season="winter"] { --bg: #0F1110; --surface: #15181A; --border-color: #2A3438; --season-accent: #8BA0A8; --season-secondary: #7A8C94; }
+[data-theme="dark"] [data-season="spring"] { --bg: #0F120E; --surface: #1A1C17; --border-color: #2F3B2A; --season-accent: #7A9E6E; --season-secondary: #9FB892; }
+[data-theme="dark"] [data-season="summer"] { --bg: #12130F; --surface: #1C1D17; --border-color: #3A3D2A; --season-accent: #8BA856; --season-secondary: #A8B87A; }
+[data-theme="dark"] [data-season="autumn"] { --bg: #12100E; --surface: #1C1A16; --border-color: #3A342A; --season-accent: #B4906A; --season-secondary: #B89A73; }
 
 * {
   box-sizing: border-box;
@@ -31,19 +119,19 @@
   padding: 0;
 }
 
-/* Appens bakgrund sätts av App.jsx efter ljust/mörkt läge, så att ytan runt
-   appen och det som syns när man drar i sidan har samma färg som appen. */
+/* Samma bakgrund runt appen och när man drar i sidan som i appen.
+   App.jsx sätter data-theme på <html> och theme-color efter läget. */
 html {
-  background: var(--app-bg, #12130F);
+  background: var(--bg);
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
 }
 
 body {
-  background: var(--app-bg, #12130F);
+  background: var(--bg);
   overflow-x: clip;
   min-height: 100dvh;
-  color: var(--ink);
+  color: var(--text);
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
@@ -53,7 +141,7 @@ h1, h2, h3 {
   font-family: var(--font-heading);
   font-variation-settings: var(--fraunces-soft);
   font-weight: 500;
-  color: var(--salvia-800);
+  color: var(--text);
 }
 
 /* iPhone zoomar in när man trycker i ett fält med text under 16px, och zoomar
@@ -67,3 +155,8 @@ input, textarea, select, button {
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* Logotypen och inloggningsbilden är ritade för mörk bakgrund. I ljust läge
+   vänds logotypen och bilden tonas ner lite. */
+[data-theme="light"] .logo-adapt { filter: invert(1) opacity(0.55); }
+[data-theme="light"] .img-adapt  { filter: brightness(0.9); }

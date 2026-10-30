@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { loadPending, saveReview, loadSummary, OUTCOMES, REASONS, SEASON } from '../lib/review'
 
 // Höstbokslut: ett frö i taget, tre val, sedan en sammanfattning.
-export default function Review({ dark, onDone }) {
+export default function Review({ onDone }) {
   const [queue, setQueue] = useState(null)
   const [index, setIndex] = useState(0)
   const [outcome, setOutcome] = useState(null)
@@ -14,12 +14,12 @@ export default function Review({ dark, onDone }) {
   const [error, setError] = useState('')
   const [summary, setSummary] = useState(null)
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#9DBA92' : '#4E6E44'
-  const border = dark ? '#2A2E24' : '#E0DDD4'
-  const chosenBg = dark ? '#2A4030' : '#D4E4CC'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const border = 'var(--border-color)'
+  const chosenBg = 'var(--accent-selected)'
 
   useEffect(() => {
     loadPending().then(setQueue).catch(() => setError('Kunde inte hämta årets sådder.'))
@@ -82,7 +82,7 @@ export default function Review({ dark, onDone }) {
           <p className="t-prose" style={{ color: text }}>Det fanns inga sådder att gå igenom i år.</p>
         )}
         <p className="t-small" style={{ color: muted, margin: '16px 0' }}>Fröpåsarna står kvar i Fröarkivet, redo för nästa år.</p>
-        <button type="button" onClick={onDone} className="t-body" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#4E6E44', color: '#F2F0E8', fontWeight: 700, cursor: 'pointer' }}>Klar</button>
+        <button type="button" onClick={onDone} className="t-body" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer' }}>Klar</button>
       </div>
     )
   }
@@ -139,11 +139,11 @@ export default function Review({ dark, onDone }) {
       )}
 
       {outcome === 'failed' && <p className="t-caption" style={{ color: muted, margin: '8px 0 0' }}>Fröet flyttas till Komposten. Du kan plocka tillbaka det därifrån.</p>}
-      {error && <p className="t-small" style={{ color: '#E24B4A', margin: '12px 0 0' }}>{error}</p>}
+      {error && <p className="t-small" style={{ color: 'var(--danger-text)', margin: '12px 0 0' }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
         <button type="button" onClick={() => next(true)} className="t-body" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '0.5px solid ' + border, background: 'transparent', color: text, cursor: 'pointer' }}>Hoppa över</button>
-        <button type="button" disabled={!outcome || saving} onClick={() => next(false)} className="t-body" style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: outcome ? '#4E6E44' : border, color: '#F2F0E8', fontWeight: 700, cursor: outcome ? 'pointer' : 'default' }}>
+        <button type="button" disabled={!outcome || saving} onClick={() => next(false)} className="t-body" style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: outcome ? 'var(--accent)' : 'var(--surface-raised)', color: outcome ? 'var(--on-accent)' : 'var(--text-subtle)', fontWeight: 700, cursor: outcome ? 'pointer' : 'default' }}>
           {saving ? 'Sparar…' : index + 1 === queue.length ? 'Spara och avsluta' : 'Spara och nästa'}
         </button>
       </div>

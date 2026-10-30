@@ -49,7 +49,15 @@ Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i 
 
 ## Design
 
-Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.css`. Använd dem i stället för hårdkodade färger. Mycket av den befintliga koden har inline-stilar med hårdkodade färger, så flytta över till tokens när du ändå arbetar i en fil, men gör inga stora omskrivningar utan att fråga.
+Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.css`. Skriv aldrig hexkoder i komponenterna.
+
+### Färger
+
+- Använd **rolltokens** (`--bg`, `--surface`, `--surface-muted`, `--surface-raised`, `--border`/`--border-color`, `--text`, `--text-muted`, `--text-subtle`, `--text-accent`, `--accent`/`--on-accent`, `--accent-soft`, `--accent-selected`, `--accent-border`, `--accent-icon-bg`, `--danger`, `--danger-text`, `--warn-*`, `--info-*`, `--feature-*`). Råpaletten (`--salvia-*`, `--warm-*`) är bara byggstenar för rolltokens.
+- Ljust/mörkt läge styrs av `data-theme` på `<html>` (sätts i App.jsx). Rolltokens byter värde själva, så sidor ska inte ta emot `dark` som prop eller ha egna `dark ? … : …`-färger.
+- Kalendern sätter `data-season` och får `--season-accent` och `--season-secondary` plus egna ytor per årstid.
+- Tillgänglighet styr: text ska klara WCAG AA (4,5:1, stor text 3:1) mot sin bakgrund i båda lägena. Sänk aldrig kontrasten med `opacity` på text. Nya färger kontrastkollas innan de läggs in.
+- Ikoner (`Icon`, `CategoryIcon`) är SVG med `fill="currentColor"` och tar färg via `color`, gärna en token.
 
 ### Typografi
 

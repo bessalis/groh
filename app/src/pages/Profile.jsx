@@ -7,19 +7,19 @@ import { supabase } from '../lib/supabase'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
 
-export default function Profile({ dark, onLogout }) {
+export default function Profile({ onLogout }) {
   const [user, setUser] = useState(null)
   const [seedCount, setSeedCount] = useState(0)
   const [savingZone, setSavingZone] = useState(false)
   const [zoneError, setZoneError] = useState('')
   const { zone, chosen } = readZone(user)
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const border = dark ? '#2A2E24' : '#E8E4DA'
-  const iconBg = dark ? '#2A3828' : '#E8EDE6'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const border = 'var(--border-color)'
+  const iconBg = 'var(--accent-icon-bg)'
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
@@ -52,8 +52,8 @@ export default function Profile({ dark, onLogout }) {
       </div>
       <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#4E6E44', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="#F2F0E8">
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--on-accent)">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
           </div>
@@ -74,7 +74,7 @@ export default function Profile({ dark, onLogout }) {
       <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
         <ZonePicker zone={zone} chosen={chosen} onChange={changeZone} saving={savingZone}
           colors={{ text, muted, border, cardBg, activeBg: iconBg }} />
-        {zoneError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#E24B4A' }}>{zoneError}</p>}
+        {zoneError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--danger-text)' }}>{zoneError}</p>}
       </div>
       <div style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {menuItems.map((item, i) => (
@@ -87,7 +87,7 @@ export default function Profile({ dark, onLogout }) {
           </div>
         ))}
         <div onClick={handleLogout} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: '4px' }}>
-          <span style={{ fontSize: '15px', color: '#E24B4A' }}>Logga ut</span>
+          <span style={{ fontSize: '15px', color: 'var(--danger-text)' }}>Logga ut</span>
         </div>
         <p style={{ textAlign: 'center', fontSize: '12px', color: border, marginTop: '8px' }}>Groh! · Version 1.0.0</p>
       </div>

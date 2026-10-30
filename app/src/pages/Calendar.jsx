@@ -11,24 +11,7 @@ const PHASE_ICON = { seed: 'seed', seedling: 'seedling', growing: 'grown', matur
 
 const MONTHS_SV = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
 
-const SEASONAL_THEMES = {
-  winter: {
-    dark:  { bg: '#0F1110', cardBg: '#15181A', border: '#2A3438', accent: '#8BA0A8', secondary: '#5B6B73' },
-    light: { bg: '#EEF1F2', cardBg: '#FFFFFF',  border: '#C8D4D8', accent: '#5B7E8A', secondary: '#7A9EAA' },
-  },
-  spring: {
-    dark:  { bg: '#0F120E', cardBg: '#1A1C17', border: '#2F3B2A', accent: '#7A9E6E', secondary: '#9FB892' },
-    light: { bg: '#F0F4EE', cardBg: '#FFFFFF',  border: '#C4D4BE', accent: '#4E7244', secondary: '#6A9860' },
-  },
-  summer: {
-    dark:  { bg: '#12130F', cardBg: '#1C1D17', border: '#3A3D2A', accent: '#8BA856', secondary: '#A8B87A' },
-    light: { bg: '#F2F3EC', cardBg: '#FFFFFF',  border: '#CCCEA8', accent: '#5E7030', secondary: '#7A9040' },
-  },
-  autumn: {
-    dark:  { bg: '#12100E', cardBg: '#1C1A16', border: '#3A342A', accent: '#A8845B', secondary: '#B89A73' },
-    light: { bg: '#F3F0EC', cardBg: '#FFFFFF',  border: '#D4C8B8', accent: '#7A5A30', secondary: '#9A7448' },
-  },
-}
+// Årstidernas färger ligger i tokens.css under [data-season].
 
 function getSeason(month) {
   if (month === 11 || month <= 1) return 'winter'
@@ -97,7 +80,7 @@ function SeasonalPattern({ month, accent }) {
   )
 }
 
-export default function Calendar({ dark }) {
+export default function Calendar() {
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
@@ -115,8 +98,8 @@ export default function Calendar({ dark }) {
   const { zone, chosen: zoneChosen } = readZone(user)
 
   const season = getSeason(currentMonth)
-  const theme = SEASONAL_THEMES[season][dark ? 'dark' : 'light']
-  const { bg, cardBg, border, accent, secondary } = theme
+  const bg = 'var(--bg)', cardBg = 'var(--surface)', border = 'var(--border-color)'
+  const accent = 'var(--season-accent)', secondary = 'var(--season-secondary)'
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
@@ -206,7 +189,7 @@ export default function Calendar({ dark }) {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', position: 'relative', overflow: 'hidden', transition: 'background 0.5s' }}>
+    <div data-season={season} style={{ background: bg, color: 'var(--text)', minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', position: 'relative', overflow: 'hidden', transition: 'background 0.5s' }}>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:0.2} }
         @keyframes slideInRight { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
@@ -232,7 +215,7 @@ export default function Calendar({ dark }) {
           >
             {MONTHS_SV[currentMonth]}
           </h1>
-          <p style={{ fontSize: '12px', color: accent, margin: '4px 0 0', opacity: 0.7 }}>{currentYear} · Zon {ROMAN[zone]}{zoneChosen ? '' : ' (antagen)'}</p>
+          <p style={{ fontSize: '12px', color: accent, margin: '4px 0 0' }}>{currentYear} · Zon {ROMAN[zone]}{zoneChosen ? '' : ' (antagen)'}</p>
         </div>
         <button onClick={() => navigate(1)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: accent, fontSize: 24, lineHeight: 1 }}>›</button>
       </div>
@@ -243,7 +226,7 @@ export default function Calendar({ dark }) {
         {user && !zoneChosen && (
           <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
             <ZonePicker zone={zone} chosen={false} onChange={chooseZone} saving={savingZone}
-              colors={{ text: dark ? '#F2F0E8' : '#1E2018', muted: accent, border, cardBg, activeBg: dark ? '#1E3020' : '#E8EDE4' }} />
+              colors={{ text: 'var(--text)', muted: accent, border, cardBg, activeBg: 'var(--accent-soft)' }} />
           </div>
         )}
 
@@ -255,11 +238,11 @@ export default function Calendar({ dark }) {
               <Skeleton w="95%" /><Skeleton w="80%" /><Skeleton w="88%" />
             </div>
           ) : aiContent?.seasonText ? (
-            <p style={{ fontSize: 'var(--prose)', fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 400, color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.55 }}>
+            <p style={{ fontSize: 'var(--prose)', fontFamily: 'var(--font-heading)', fontVariationSettings: 'var(--fraunces-soft)', fontWeight: 400, color: 'var(--text)', margin: 0, lineHeight: 1.55 }}>
               {aiContent.seasonText}
             </p>
           ) : (
-            <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0, opacity: 0.6 }}>Hämtar säsongstext...</p>
+            <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Hämtar säsongstext...</p>
           )}
         </div>
 
@@ -269,7 +252,7 @@ export default function Calendar({ dark }) {
 
           {seeds.length === 0 ? (
             <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '18px 20px' }}>
-              <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0, opacity: 0.6 }}>Du har inga frön i arkivet ännu.</p>
+              <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Du har inga frön i arkivet ännu.</p>
             </div>
           ) : (
             <>
@@ -288,7 +271,7 @@ export default function Calendar({ dark }) {
                         flexShrink: 0, width: '100px', height: '100px',
                         borderRadius: '14px', padding: '10px 10px 8px',
                         border: '0.5px solid ' + (active ? accent : border),
-                        background: active ? (dark ? '#1E3020' : '#E8EDE4') : cardBg,
+                        background: active ? 'var(--accent-soft)' : cardBg,
                         cursor: 'pointer', textAlign: 'left',
                         display: 'flex', flexDirection: 'column', gap: '5px',
                         transition: 'background 0.2s, border-color 0.2s',
@@ -297,20 +280,20 @@ export default function Calendar({ dark }) {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? (dark ? '#2A4030' : '#D4E4CC') : (dark ? '#1E2A1A' : '#EDF2EA'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? 'var(--accent-selected)' : 'var(--accent-icon-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           {category
-                            ? <CategoryIcon category={category} size={17} color="#7A9E6E" />
-                            : <Icon name={icon} size={16} color="#7A9E6E" />}
+                            ? <CategoryIcon category={category} size={17} color={accent} />
+                            : <Icon name={icon} size={16} color={accent} />}
                         </div>
                         {category && PHASE_LABEL[seed.current_phase] && (
-                          <span style={{ fontSize: '10px', color: accent, opacity: 0.85, whiteSpace: 'nowrap' }}>{PHASE_LABEL[seed.current_phase]}</span>
+                          <span style={{ fontSize: '10px', color: accent, whiteSpace: 'nowrap' }}>{PHASE_LABEL[seed.current_phase]}</span>
                         )}
                       </div>
-                      <p style={{ fontSize: '12px', fontWeight: 500, color: dark ? '#F2F0E8' : '#1E2018', margin: 0, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
+                      <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text)', margin: 0, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
                         {seed.name}
                       </p>
                       {tip && (
-                        <p style={{ fontSize: '10px', color: accent, margin: 0, lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', opacity: 0.85 }}>
+                        <p style={{ fontSize: '10px', color: accent, margin: 0, lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                           {tip}
                         </p>
                       )}
@@ -324,8 +307,8 @@ export default function Calendar({ dark }) {
 
               {/* Valt frö – fullt tipskort */}
               {selectedSeed && selectedTip && (
-                <div style={{ background: cardBg, border: '0.5px solid ' + accent + '4D', borderRadius: '14px', padding: '14px 16px', marginTop: '10px', animation: 'fadeUp 0.25s ease both' }}>
-                  <p style={{ fontSize: '13px', color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.6 }}>{selectedTip}</p>
+                <div style={{ background: cardBg, border: '0.5px solid color-mix(in srgb, ' + accent + ' 30%, transparent)', borderRadius: '14px', padding: '14px 16px', marginTop: '10px', animation: 'fadeUp 0.25s ease both' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{selectedTip}</p>
                 </div>
               )}
             </>
@@ -344,16 +327,16 @@ export default function Calendar({ dark }) {
           ) : aiContent?.generalTips?.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {aiContent.generalTips.map((tip, i) => (
-                <p key={i} style={{ fontSize: '14px', color: dark ? '#D1D5DB' : '#2A2E24', margin: 0, lineHeight: 1.6 }}>{tip}</p>
+                <p key={i} style={{ fontSize: '14px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{tip}</p>
               ))}
-              <p style={{ fontSize: '11px', color: accent, margin: '4px 0 0', opacity: 0.75 }}>
+              <p style={{ fontSize: '11px', color: accent, margin: '4px 0 0' }}>
                 {aiContent.seasonStatus === 'reviewed'
                   ? 'Texterna på den här sidan är skrivna med AI och granskade.'
                   : 'Texterna på den här sidan är skrivna av AI och ännu inte granskade.'}
               </p>
             </div>
           ) : (
-            <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0, opacity: 0.6 }}>Hämtar inspirationstips...</p>
+            <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Hämtar inspirationstips...</p>
           )}
         </div>
 

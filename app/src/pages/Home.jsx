@@ -20,18 +20,18 @@ const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', '
 const PRIORITY = { seedling: 0, growing: 1, seed: 2, mature: 3 }
 const byUrgency = (a, b) => (PRIORITY[a.current_phase] ?? 4) - (PRIORITY[b.current_phase] ?? 4)
 
-export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
+export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
   const [seedCount, setSeedCount] = useState(0)
   const [todo, setTodo] = useState(null)        // [{ seed, tip }] eller null medan det laddar
   const [season, setSeason] = useState(null)    // { month, text, tip }
   const [categories, setCategories] = useState({})
   const [toReview, setToReview] = useState(0)
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const borderColor = dark ? '#2A2E24' : '#E8E4DA'
-  const gradientStop = dark ? '#12130F' : '#F2F0E8'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const borderColor = 'var(--border-color)'
+  const gradientStop = 'var(--bg)'
 
   useEffect(() => {
     if (isReviewTime()) loadPending().then(list => setToReview(list.length)).catch(() => { /* kortet visas inte */ })
@@ -91,17 +91,17 @@ export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
 
         {/* logga + undertext */}
         <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, textAlign: 'center', zIndex: 1 }}>
-          <img src={grohLogo} alt="Groh" style={{ width: '180px', display: 'inline-block', filter: dark ? 'none' : 'invert(1) opacity(0.55)' }} />
-          <p style={{ fontSize: '13px', color: muted, margin: '-20px 0 0' }}>{plantText(seedCount)}</p>
+          <img src={grohLogo} alt="Groh" style={{ width: '180px', display: 'inline-block' }} className="logo-adapt" />
+          <p style={{ fontSize: '13px', color: muted, margin: '-20px 0 0', textShadow: '0 0 4px var(--bg), 0 0 8px var(--bg), 0 0 12px var(--bg)' }}>{plantText(seedCount)}</p>
         </div>
 
         {/* botten-gradient + snabbkort */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (
-            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: '#808F73', border: 'none', borderRadius: '14px', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#11171F' }}>
-              <span aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#75836B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#11171F' }}>{s.icon}</span>
-              <span className="t-body" style={{ fontSize: '18px', fontWeight: 500, color: '#11171F' }}>{s.label}</span>
+            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: 'var(--feature-bg)', border: 'none', borderRadius: '14px', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--on-feature)' }}>
+              <span aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--feature-bg-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: 'var(--on-feature)' }}>{s.icon}</span>
+              <span className="t-body" style={{ fontSize: '18px', fontWeight: 500, color: 'var(--on-feature)' }}>{s.label}</span>
             </button>
           ))}
         </div>
@@ -112,13 +112,13 @@ export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
 
         {/* Höstbokslut */}
         {toReview > 0 && onOpenReview && (
-          <section style={{ background: '#808F73', borderRadius: '16px', padding: '18px', color: '#11171F' }}>
-            <p className="t-label" style={{ margin: '0 0 8px', color: '#11171F' }}>Höstbokslut {SEASON}</p>
-            <p className="t-heading" style={{ margin: '0 0 6px', color: '#11171F' }}>Dags att stänga säsongen</p>
-            <p className="t-small" style={{ margin: '0 0 14px', color: '#11171F' }}>
+          <section style={{ background: 'var(--feature-bg)', borderRadius: '16px', padding: '18px', color: 'var(--on-feature)' }}>
+            <p className="t-label" style={{ margin: '0 0 8px', color: 'var(--on-feature)' }}>Höstbokslut {SEASON}</p>
+            <p className="t-heading" style={{ margin: '0 0 6px', color: 'var(--on-feature)' }}>Dags att stänga säsongen</p>
+            <p className="t-small" style={{ margin: '0 0 14px', color: 'var(--on-feature)' }}>
               Gå igenom {toReview === 1 ? 'årets sådd' : `årets ${toReview} sådder`}: vad blev bra, och vad blev inget? Det du lär dig följer med till nästa år.
             </p>
-            <button type="button" onClick={onOpenReview} className="t-body" style={{ background: '#11171F', color: '#F2F0E8', border: 'none', borderRadius: '10px', padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={onOpenReview} className="t-body" style={{ background: 'var(--on-feature)', color: 'var(--feature-bg-light)', border: 'none', borderRadius: '10px', padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}>
               Börja bokslutet
             </button>
           </section>
@@ -135,12 +135,12 @@ export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {todo.map(({ seed, tip }) => (
                 <li key={seed.id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 9, background: dark ? '#1E2A1A' : '#EDF2EA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#7A9E6E' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--accent-icon-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--text-muted)' }}>
                     <CategoryIcon category={categories[plantKey(seed)]} size={18} />
                   </div>
                   <div>
                     <p className="t-heading-s" style={{ color: text, margin: 0 }}>{seed.name}</p>
-                    <p className="t-small" style={{ color: text, opacity: 0.85, margin: '2px 0 0' }}>{tip}</p>
+                    <p className="t-small" style={{ color: text, margin: '2px 0 0' }}>{tip}</p>
                   </div>
                 </li>
               ))}
@@ -155,7 +155,7 @@ export default function Home({ dark, onAdd, onOpenCalendar, onOpenReview }) {
               {season.month === new Date().getMonth() ? 'Just nu i ' : 'Viktigt inför '}{MONTHS[season.month]}
             </p>
             <p className="t-prose" style={{ color: text, margin: 0 }}>{season.text}</p>
-            {season.tip && <p className="t-small" style={{ color: text, opacity: 0.85, margin: '10px 0 0' }}>{season.tip}</p>}
+            {season.tip && <p className="t-small" style={{ color: text, margin: '10px 0 0' }}>{season.tip}</p>}
             {onOpenCalendar && (
               <button type="button" onClick={onOpenCalendar} className="t-small" style={{ background: 'none', border: 'none', padding: 0, marginTop: '12px', color: muted, cursor: 'pointer', fontWeight: 700 }}>
                 Till kalendern →

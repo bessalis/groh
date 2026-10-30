@@ -3,7 +3,7 @@ import plantImg from '../assets/brysselkal_seedling.png'
 import grohLogo from '../assets/groh.svg'
 import { supabase } from '../lib/supabase'
 
-export default function Login({ dark, onLogin }) {
+export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [mode, setMode] = useState('login')
@@ -11,11 +11,11 @@ export default function Login({ dark, onLogin }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const border = dark ? '#2A2E24' : '#E8E4DA'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const border = 'var(--border-color)'
   const inputStyle = { width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
 
   async function handleSubmit() {
@@ -36,11 +36,11 @@ export default function Login({ dark, onLogin }) {
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ width: '220px', height: '220px', margin: '0 auto 24px', overflow: 'hidden' }}>
-        <img src={plantImg} alt="" style={{ width: '100%', objectFit: 'contain', filter: dark ? 'none' : 'brightness(0.9)' }} />
+        <img src={plantImg} alt="" style={{ width: '100%', objectFit: 'contain' }} className="img-adapt" />
       </div>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ margin: '0 0 8px', lineHeight: 0 }}>
-          <img src={grohLogo} alt="Groh!" style={{ width: '170px', display: 'inline-block', filter: dark ? 'none' : 'invert(1) opacity(0.55)' }} />
+          <img src={grohLogo} alt="Groh!" style={{ width: '170px', display: 'inline-block' }} className="logo-adapt" />
         </h1>
         <p className="t-body" style={{ color: muted, margin: 0 }}>Din digitala trädgård</p>
       </div>
@@ -57,9 +57,9 @@ export default function Login({ dark, onLogin }) {
           <p style={{ fontSize: '12px', color: muted, margin: '0 0 5px' }}>Lösenord</p>
           <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="min 6 tecken" style={inputStyle} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         </div>
-        {error && <p style={{ fontSize: '13px', color: '#E28080', textAlign: 'center', margin: '0 0 12px' }}>{error}</p>}
+        {error && <p style={{ fontSize: '13px', color: 'var(--danger-text)', textAlign: 'center', margin: '0 0 12px' }}>{error}</p>}
         {success && <p style={{ fontSize: '13px', color: muted, textAlign: 'center', margin: '0 0 12px' }}>{success}</p>}
-        <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', padding: '13px', background: '#4E6E44', border: 'none', borderRadius: '10px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', padding: '13px', background: 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
           {loading ? '...' : mode === 'login' ? 'Logga in' : 'Skapa konto'}
         </button>
       </div>

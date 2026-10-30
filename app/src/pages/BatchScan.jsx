@@ -103,6 +103,21 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
   async function detectGroup(file, side) {
     if (!file) return
     closeGroup(); setError('')
+    // En enda påse: baksidesfotot behöver inte letas igenom. Hela fotot används som
+    // baksida, och läsningen kontrollerar ändå att den hör till framsidan.
+    if (side === 'back' && items.length === 1) {
+      try {
+        const back = await compressPhoto(file)
+        back.preview = URL.createObjectURL(back.blob)
+        previewsRef.current.push(back.preview)
+        const list = [{ ...items[0], back }]
+        setItems(list)
+        readAll(list)
+      } catch {
+        setError('Fotot kunde inte läsas. Prova att ta det igen.')
+      }
+      return
+    }
     const url = URL.createObjectURL(file)
     previewsRef.current.push(url)
     setGroup({ side, url, status: 'detecting', boxes: [] })

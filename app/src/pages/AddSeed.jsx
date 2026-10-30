@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
+import { Button, SectionLabel, AiNote } from '../components/ui'
 
 export default function AddSeed({ onBack, onSaved, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
@@ -30,13 +31,11 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
   }, [])
 
   const bg = 'var(--bg)'
-  const cardBg = 'var(--surface)'
   const text = 'var(--text)'
   const muted = 'var(--text-muted)'
   const border = 'var(--border-color)'
   const inputBg = 'var(--surface)'
   const inputStyle = { width: '100%', background: inputBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
-  const sectionLabel = { fontSize: '10px', color: muted, letterSpacing: '0.1em', margin: '0 0 10px' }
 
   async function lookupWithAI() {
     if (!name.trim()) { setError('Skriv in ett namn först'); return }
@@ -100,14 +99,14 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 16px 16px' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', cursor: 'pointer', padding: 0 }}>← Tillbaka</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '20px 64px 16px 16px' }}>
+        <Button variant="link" onClick={onBack}>← Tillbaka</Button>
         <h1 style={{ fontSize: 'var(--display-s)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: 0 }}>{editSeed ? 'Redigera frö' : 'Nytt frö'}</h1>
-        <button onClick={handleSave} disabled={saving} style={{ background: 'none', border: 'none', color: muted, fontSize: '14px', fontWeight: 500, cursor: 'pointer', padding: 0 }}>{saving ? '...' : 'Spara'}</button>
+        <Button variant="link" onClick={handleSave} disabled={saving}>{saving ? 'Sparar…' : 'Spara'}</Button>
       </div>
 
       <div style={{ padding: '0 16px' }}>
-        <p style={sectionLabel}>NAMN</p>
+        <SectionLabel>Namn</SectionLabel>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <input value={name} onChange={e => { setName(e.target.value); setAiDone(false) }} placeholder="t.ex. Luktärt Cupani" style={{ ...inputStyle, flex: 1 }} />
           <button onClick={lookupWithAI} disabled={aiLoading || !name.trim()}
@@ -117,34 +116,32 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
         </div>
 
         {aiDone && (
-          <div style={{ background: 'var(--accent-soft)', border: '0.5px solid ' + 'var(--accent-border)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '8px' }}>
-            <p style={{ fontSize: '12px', color: muted, margin: 0 }}>
-              {factStatus === 'reviewed'
-                ? '✓ Fyllt i från granskad växtfakta. Justera nedan om något inte stämmer för just ditt frö.'
-                : '✓ AI fyllde i latinskt namn och skötselkrav. Det är ett ogranskat AI-utkast, så justera nedan om något stämmer fel.'}
-              {CATEGORIES[category] && <><br />Kategori: {CATEGORIES[category].label}</>}
-            </p>
-          </div>
+          <AiNote box status={factStatus} style={{ marginBottom: '16px' }}>
+            {factStatus === 'reviewed'
+              ? 'AI fyllde i latinskt namn och skötselkrav från granskad växtfakta. Justera nedan om något inte stämmer för just ditt frö.'
+              : 'AI fyllde i latinskt namn och skötselkrav. Det är ännu inte granskat, så justera nedan om något är fel.'}
+            {CATEGORIES[category] && <><br />Kategori: {CATEGORIES[category].label}</>}
+          </AiNote>
         )}
 
-        <p style={sectionLabel}>LATINSKT NAMN</p>
+        <SectionLabel>Latinskt namn</SectionLabel>
         <input value={species} onChange={e => setSpecies(e.target.value)} placeholder="t.ex. Lathyrus odoratus" style={{ ...inputStyle, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', marginBottom: '16px' }} />
 
         <div style={{ height: '0.5px', background: border, margin: '4px 0 20px' }} />
-        <p style={sectionLabel}>EGENSKAPER</p>
+        <SectionLabel>Egenskaper</SectionLabel>
         <ToggleRow label="Frostkänslig" value={frostSensitive} onChange={setFrostSensitive} />
         <ToggleRow label="Kräver förbehandling" sub={pretreatment && pretreatmentNote ? pretreatmentNote : null} value={pretreatment} onChange={setPretreatment} />
         <ToggleRow label="Hög skötsel" value={highMaintenance} onChange={setHighMaintenance} />
 
         <div style={{ height: '0.5px', background: border, margin: '14px 0 20px' }} />
-        <p style={sectionLabel}>DITT BETYG</p>
+        <SectionLabel>Ditt betyg</SectionLabel>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
           <div onClick={() => setThumb(thumb === 'up' ? null : 'up')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'up' ? 'var(--accent)' : border), background: thumb === 'up' ? 'var(--accent-soft)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>↑ Odla igen</div>
           <div onClick={() => setThumb(thumb === 'down' ? null : 'down')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'down' ? 'var(--warn-border)' : border), background: thumb === 'down' ? 'var(--warn-bg)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: thumb === 'down' ? 'var(--warn-text)' : muted }}>↓ Tänk efter</div>
         </div>
 
         <div style={{ height: '0.5px', background: border, margin: '0 0 20px' }} />
-        <p style={sectionLabel}>SÅDD</p>
+        <SectionLabel>Sådd</SectionLabel>
         <div style={{ marginBottom: '8px' }}>
           <p style={{ fontSize: '12px', color: text, margin: '0 0 5px' }}>Sådatum</p>
           <input type="date" value={sownDate} onChange={e => setSownDate(e.target.value)} style={{ ...inputStyle }} />
@@ -158,7 +155,7 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
         </div>
 
         <div style={{ height: '0.5px', background: border, margin: '0 0 20px' }} />
-        <p style={sectionLabel}>ANTECKNINGAR</p>
+        <SectionLabel>Anteckningar</SectionLabel>
         <div style={{ marginBottom: '8px' }}>
           <p style={{ fontSize: '12px', color: text, margin: '0 0 5px' }}>Notering / såningstips</p>
           <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Var hittade du det? Såningstips?" style={inputStyle} />
@@ -174,8 +171,8 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 'min(358px, calc(100% - 32px))', display: 'flex', gap: '8px' }}>
-        <button onClick={onBack} style={{ flex: 1, padding: '13px', background: 'transparent', border: '0.5px solid ' + border, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>Avbryt</button>
-        <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: '13px', background: 'var(--accent)', border: 'none', borderRadius: '12px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>{saving ? 'Sparar...' : editSeed ? 'Spara ändringar' : 'Lägg till frö'}</button>
+        <Button large onClick={onBack} style={{ flex: 1, background: 'var(--surface)' }}>Avbryt</Button>
+        <Button variant="primary" large onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Sparar...' : editSeed ? 'Spara ändringar' : 'Lägg till frö'}</Button>
       </div>
     </div>
   )

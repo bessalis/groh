@@ -4,6 +4,8 @@ import { Icon } from '../components/Icon'
 import { callAi } from '../lib/api'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
+import { SectionLabel, AiNote } from '../components/ui'
+import { combinedStatus } from '../lib/aiStatus'
 import CategoryIcon from '../components/CategoryIcon'
 import { fetchCategories, plantKey, PHASE_LABEL } from '../lib/categories'
 
@@ -224,15 +226,15 @@ export default function Calendar() {
 
         {/* Zonval – visas tills användaren har valt sin zon */}
         {user && !zoneChosen && (
-          <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
+          <div className="card card--roomy">
             <ZonePicker zone={zone} chosen={false} onChange={chooseZone} saving={savingZone}
               colors={{ text: 'var(--text)', muted: accent, border, cardBg, activeBg: 'var(--accent-soft)' }} />
           </div>
         )}
 
         {/* Säsongen */}
-        <div key={`season-${animKey}`} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px', animation: 'fadeUp 0.4s ease 0.05s both', transition: 'background 0.5s, border-color 0.5s' }}>
-          <p style={{ fontSize: '10px', color: accent, letterSpacing: '0.12em', margin: '0 0 12px', fontWeight: 500 }}>SÄSONGEN</p>
+        <div key={`season-${animKey}`} className="card card--roomy" style={{ animation: 'fadeUp 0.4s ease 0.05s both', transition: 'background 0.5s, border-color 0.5s' }}>
+          <SectionLabel style={{ margin: '0 0 12px', color: accent }}>Säsongen</SectionLabel>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Skeleton w="95%" /><Skeleton w="80%" /><Skeleton w="88%" />
@@ -248,10 +250,10 @@ export default function Calendar() {
 
         {/* Dina frön just nu */}
         <div key={`seeds-${animKey}`} style={{ animation: 'fadeUp 0.4s ease 0.15s both' }}>
-          <p style={{ fontSize: '10px', color: accent, letterSpacing: '0.12em', margin: '0 0 12px 2px', fontWeight: 500 }}>DINA FRÖN JUST NU</p>
+          <SectionLabel style={{ margin: '0 0 12px 2px', color: accent }}>Dina frön just nu</SectionLabel>
 
           {seeds.length === 0 ? (
-            <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '18px 20px' }}>
+            <div className="card card--roomy">
               <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Du har inga frön i arkivet ännu.</p>
             </div>
           ) : (
@@ -307,7 +309,7 @@ export default function Calendar() {
 
               {/* Valt frö – fullt tipskort */}
               {selectedSeed && selectedTip && (
-                <div style={{ background: cardBg, border: '0.5px solid color-mix(in srgb, ' + accent + ' 30%, transparent)', borderRadius: '14px', padding: '14px 16px', marginTop: '10px', animation: 'fadeUp 0.25s ease both' }}>
+                <div className="card" style={{ border: '0.5px solid color-mix(in srgb, ' + accent + ' 30%, transparent)', marginTop: '10px', animation: 'fadeUp 0.25s ease both' }}>
                   <p style={{ fontSize: '13px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{selectedTip}</p>
                 </div>
               )}
@@ -316,10 +318,8 @@ export default function Calendar() {
         </div>
 
         {/* Det här är [månad] */}
-        <div key={`tips-${animKey}`} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px', animation: 'fadeUp 0.4s ease 0.25s both', transition: 'background 0.5s, border-color 0.5s' }}>
-          <p style={{ fontSize: '10px', color: accent, letterSpacing: '0.12em', margin: '0 0 14px', fontWeight: 500 }}>
-            {'DET HÄR ÄR ' + MONTHS_SV[currentMonth].toUpperCase()}
-          </p>
+        <div key={`tips-${animKey}`} className="card card--roomy" style={{ animation: 'fadeUp 0.4s ease 0.25s both', transition: 'background 0.5s, border-color 0.5s' }}>
+          <SectionLabel style={{ margin: '0 0 14px', color: accent }}>Det här är {MONTHS_SV[currentMonth].toLowerCase()}</SectionLabel>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Skeleton w="92%" /><Skeleton w="78%" />
@@ -329,11 +329,11 @@ export default function Calendar() {
               {aiContent.generalTips.map((tip, i) => (
                 <p key={i} style={{ fontSize: '14px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{tip}</p>
               ))}
-              <p style={{ fontSize: '11px', color: accent, margin: '4px 0 0' }}>
-                {aiContent.seasonStatus === 'reviewed'
-                  ? 'Texterna på den här sidan är skrivna med AI och granskade.'
+              <AiNote style={{ marginTop: '4px' }}>
+                {combinedStatus([aiContent.seasonStatus, ...(aiContent.seedTips || []).map(t => t.status)]) === 'reviewed'
+                  ? 'Texterna på den här sidan är skrivna av AI och granskade.'
                   : 'Texterna på den här sidan är skrivna av AI och ännu inte granskade.'}
-              </p>
+              </AiNote>
             </div>
           ) : (
             <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Hämtar inspirationstips...</p>

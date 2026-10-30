@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui'
 
 const images = import.meta.glob('../assets/*.png', { eager: true })
 
@@ -50,12 +51,10 @@ export default function SeedArchive({ onSelect, onAdd }) {
   const [swipedId, setSwipedId] = useState(null)
 
   const bg = 'var(--bg)'
-  const cardBg = 'var(--surface)'
   const text = 'var(--text)'
   const muted = 'var(--text-muted)'
   const borderColor = 'var(--border-color)'
   const inputBg = 'var(--surface)'
-  const btnBg = 'var(--accent)'
 
   const [compost, setCompost] = useState(false)
 
@@ -139,8 +138,8 @@ export default function SeedArchive({ onSelect, onAdd }) {
     const cardOffset = isOpen ? 90 : offset
 
     return (
-      <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', marginBottom: '8px' }}>
-        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '90px', background: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '0 14px 14px 0' }}
+      <div style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '8px' }}>
+        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '90px', background: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0' }}
           onClick={() => archiveSeed(seed.id)}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px' }}>📦</div>
@@ -150,7 +149,7 @@ export default function SeedArchive({ onSelect, onAdd }) {
         <div
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
-          style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
+          className="card" style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
         <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: 'var(--display-s)', color: text, lineHeight: 1.1, fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em' }}>{seed.name}</p>
@@ -187,10 +186,9 @@ export default function SeedArchive({ onSelect, onAdd }) {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Sök frön..."
             style={{ width: '100%', padding: '12px 16px', background: inputBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', fontSize: '14px', color: text, outline: 'none', boxSizing: 'border-box' }} />
         </div>
-        <button onClick={() => onAdd && onAdd()}
-          style={{ width: '100%', padding: '14px', background: btnBg, border: 'none', borderRadius: '12px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer', marginBottom: '20px' }}>
+        <Button variant="primary" large full onClick={() => onAdd && onAdd()} style={{ marginBottom: '20px' }}>
           + Lägg till frö
-        </button>
+        </Button>
       </div>
       <div style={{ padding: '0 16px' }}>
         {loading && <p style={{ color: muted, fontStyle: 'italic', textAlign: 'center' }}>Hämtar frön...</p>}
@@ -200,12 +198,12 @@ export default function SeedArchive({ onSelect, onAdd }) {
         )}
         {!compost && filtered.map(seed => <SwipeCard key={seed.id} seed={seed} />)}
         {compost && filtered.map(seed => (
-          <div key={seed.id} style={{ background: 'var(--surface)', border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div key={seed.id} className="card" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="t-heading-s" style={{ color: text, margin: 0 }}>{seed.name}</p>
               {seed.thumb_note && <p className="t-caption" style={{ color: muted, margin: '2px 0 0' }}>{seed.thumb_note}</p>}
             </div>
-            <button type="button" onClick={() => restoreSeed(seed.id)} className="t-small" style={{ background: 'none', border: '0.5px solid ' + borderColor, borderRadius: '10px', padding: '8px 12px', color: text, cursor: 'pointer', whiteSpace: 'nowrap' }}>Plocka tillbaka</button>
+            <Button onClick={() => restoreSeed(seed.id)} style={{ whiteSpace: 'nowrap' }}>Plocka tillbaka</Button>
           </div>
         ))}
       </div>

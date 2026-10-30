@@ -59,6 +59,15 @@ Färger, typsnitt och radier finns som CSS-variabler i `app/src/styles/tokens.cs
 - Tillgänglighet styr: text ska klara WCAG AA (4,5:1, stor text 3:1) mot sin bakgrund i båda lägena. Sänk aldrig kontrasten med `opacity` på text. Nya färger kontrastkollas innan de läggs in.
 - Ikoner (`Icon`, `CategoryIcon`) är SVG med `fill="currentColor"` och tar färg via `color`, gärna en token.
 
+### Komponenter
+
+Delade byggstenar i `app/src/components/ui.jsx` med stilar i `app/src/styles/components.css`. Använd dem i stället för egna inline-stilar.
+
+- **Kort** är klasser: `card`, plus `card--compact`, `card--roomy`, `card--soft` (salvia), `card--muted` (utan kant) eller `card--feature` (salviakortet på startsidan). Ett klickbart kort är en `<button className="card">`, inte en `div` med `onClick`.
+- **`Button`** med `variant`: `primary` (högst en per vy), `secondary` (standard), `ghost`, `danger`, `danger-ghost`, `link`, `feature`, `on-image`. `full` fyller bredden, `large` för huvudknappen. Minst 44px hög och med synlig fokusmarkering.
+- **`SectionLabel`** för små versalrubriker ("Tillväxtfas"). Skriv texten med vanlig versal/gemen, CSS gör versalerna. Den är en `h2` (eller `as="h3"` inuti en sektion som redan har en rubrik).
+- **`AiNote`** för all AI-märkning, med `status` `ai_draft` eller `reviewed` (se `lib/aiStatus.js` när flera texter visas samtidigt). `box` ger en salviaruta, `children` ersätter standardtexten.
+
 ### Typografi
 
 Allt finns i `app/src/styles/typography.css`. Tre fria typsnitt (OFL), inbyggda i appen:
@@ -71,7 +80,7 @@ Skriv aldrig typsnittsnamn eller egna storlekar direkt i koden, använd tokens e
 
 ## Mobil
 
-- Sidans bakgrund (`--app-bg`) och `theme-color` sätts av App.jsx efter ljust/mörkt läge, så att ytan runt appen har samma färg.
+- Sidans bakgrund (`--bg` på `<html>`) och `theme-color` följer ljust/mörkt läge via `data-theme` från App.jsx, så att ytan runt appen har samma färg.
 - Fält har minst 16px text på pekskärmar, annars zoomar iPhone in och fastnar.
 - Fasta element (menyn, knappar i botten) använder `env(safe-area-inset-*)` och får inte ha fast bredd större än skärmen.
 

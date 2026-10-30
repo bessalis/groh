@@ -7,6 +7,7 @@ import IconWater from '../assets/water.svg?react'
 import IconSun from '../assets/sun.svg?react'
 import IconTemp from '../assets/temperature.svg?react'
 import { useState } from 'react'
+import { Button, SectionLabel } from '../components/ui'
 import { supabase } from '../lib/supabase'
 
 const images = import.meta.glob('../assets/*.png', { eager: true })
@@ -86,7 +87,6 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
   }
 
   const bg = 'var(--bg)'
-  const cardBg = 'var(--surface)'
   const text = 'var(--text)'
   const muted = 'var(--text-muted)'
   const borderColor = 'var(--border-color)'
@@ -135,14 +135,14 @@ function getImage() {
             onError={e => { e.target.src = images['../assets/fallback_growing.png']?.default }} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 50%, ' + bg + ')' }} />
         </div>
-        <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'var(--scrim)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: 'var(--paper-dark)', fontSize: '13px', cursor: 'pointer' }}>
+        <Button variant="on-image" onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px' }}>
           ← Tillbaka
-        </button>
-        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '60px', background: 'var(--scrim)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1, zIndex: 10 }}>
+        </Button>
+        <Button variant="on-image" onClick={handleToggleFavorite} aria-label="Favorit" aria-pressed={isFavorite} style={{ position: 'absolute', top: '16px', right: '60px', padding: '6px 10px', zIndex: 10 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? 'var(--paper-dark)' : 'none'} stroke="var(--paper-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       <div style={{ padding: '0 16px', marginTop: '-20px', position: 'relative' }}>
@@ -161,9 +161,9 @@ function getImage() {
           </div>
         )}
 
-        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '16px', marginBottom: '12px' }}>
+        <div className="card" style={{ marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: 0 }}>TILLVÄXTFAS</p>
+            <SectionLabel style={{ margin: 0 }}>Tillväxtfas</SectionLabel>
             {savingPhase && <p style={{ fontSize: '11px', color: muted, margin: 0 }}>Sparar...</p>}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
@@ -189,8 +189,8 @@ function getImage() {
           </p>
         </div>
 
-        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
-          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 12px' }}>SKÖTSELINSTRUKTIONER</p>
+        <div className="card" style={{ marginBottom: '12px' }}>
+          <SectionLabel style={{ margin: '0 0 12px' }}>Skötselinstruktioner</SectionLabel>
           <div style={{ display: 'flex', gap: '8px' }}>
             {[
               { icon: 'water', label: 'Vattning', value: care.water },
@@ -208,8 +208,8 @@ function getImage() {
           </div>
         </div>
 
-        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
-          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>NÄSTA STEG</p>
+        <div className="card" style={{ marginBottom: '12px' }}>
+          <SectionLabel style={{ margin: '0 0 8px' }}>Nästa steg</SectionLabel>
           <p style={{ fontSize: '14px', color: text, margin: 0, lineHeight: 1.5 }}>{NEXT_STEP[currentPhase]}</p>
           {seed.frost_sensitive && (
             <p style={{ fontSize: '13px', color: 'var(--warn-text)', margin: '8px 0 0', lineHeight: 1.5 }}>⚠ Frostkänslig – vänta tills nattfrosten är över innan utplantering.</p>
@@ -217,8 +217,8 @@ function getImage() {
         </div>
 
         {(seed.frost_sensitive || seed.requires_pretreatment) && (
-          <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 10px' }}>ATT TÄNKA PÅ</p>
+          <div className="card" style={{ marginBottom: '12px' }}>
+            <SectionLabel>Att tänka på</SectionLabel>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {seed.frost_sensitive && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--warn-bg)', color: 'var(--warn-text)', border: '0.5px solid var(--warn-border)' }}>Frostkänslig</span>}
               {seed.requires_pretreatment && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--info-bg)', color: 'var(--info-text)', border: '0.5px solid var(--info-border)' }}>Förbehandling krävs</span>}
@@ -226,8 +226,8 @@ function getImage() {
           </div>
         )}
 
-        <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
-          <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>ANTECKNINGAR</p>
+        <div className="card" style={{ marginBottom: '12px' }}>
+          <SectionLabel style={{ margin: '0 0 8px' }}>Anteckningar</SectionLabel>
           <textarea
             value={userNotes}
             onChange={e => setUserNotes(e.target.value)}
@@ -235,29 +235,21 @@ function getImage() {
             style={{ width: '100%', minHeight: '80px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '8px', padding: '8px 10px', fontSize: '14px', color: text, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-            <button onClick={handleSaveNotes} style={{ padding: '7px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: 'var(--on-accent)', fontSize: '13px', cursor: 'pointer' }}>
-              Spara
-            </button>
+            <Button variant="primary" onClick={handleSaveNotes}>Spara anteckning</Button>
             {savedNotes && <span style={{ fontSize: '12px', color: muted }}>Sparat!</span>}
           </div>
         </div>
       </div>
 
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', marginBottom: '32px' }}>
-        <button onClick={() => onEdit && onEdit(seed)} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
-          Redigera frö
-        </button>
-        <button onClick={handleArchive} style={{ width: '100%', padding: '13px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>
-          Arkivera frö
-        </button>
+        <Button full onClick={() => onEdit && onEdit(seed)}>Redigera frö</Button>
+        <Button full onClick={handleArchive}>Arkivera frö</Button>
         {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ width: '100%', padding: '10px', background: 'transparent', border: 'none', borderRadius: '12px', color: 'var(--danger-text)', fontSize: '13px', cursor: 'pointer' }}>
-            Ta bort frö permanent
-          </button>
+          <Button variant="danger-ghost" full onClick={() => setConfirmDelete(true)}>Ta bort frö permanent</Button>
         ) : (
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '13px', cursor: 'pointer' }}>Avbryt</button>
-            <button onClick={handleDelete} style={{ flex: 1, padding: '10px', background: 'var(--danger)', border: 'none', borderRadius: '12px', color: 'var(--on-danger)', fontSize: '13px', cursor: 'pointer' }}>Ja, ta bort</button>
+            <Button full onClick={() => setConfirmDelete(false)}>Avbryt</Button>
+            <Button variant="danger" full onClick={handleDelete}>Ja, ta bort</Button>
           </div>
         )}
       </div>

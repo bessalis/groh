@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
+import { Button, SectionLabel, AiNote } from '../components/ui'
+import { combinedStatus } from '../lib/aiStatus'
 import { fetchCategories, plantKey } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
 import { isReviewTime, loadPending, SEASON } from '../lib/review'
@@ -27,10 +29,8 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
   const [categories, setCategories] = useState({})
   const [toReview, setToReview] = useState(0)
   const bg = 'var(--bg)'
-  const cardBg = 'var(--surface)'
   const text = 'var(--text)'
   const muted = 'var(--text-muted)'
-  const borderColor = 'var(--border-color)'
   const gradientStop = 'var(--bg)'
 
   useEffect(() => {
@@ -57,9 +57,9 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
             month, year: now.getFullYear(),
             seeds: seeds.map(s => ({ name: s.name, species: s.species, current_phase: s.current_phase, frost_sensitive: s.frost_sensitive })),
           })
-          const tipFor = Object.fromEntries((cal.seedTips || []).map(t => [t.seedName, t.tip]))
-          setTodo([...seeds].sort(byUrgency).filter(s => tipFor[s.name]).slice(0, 3).map(seed => ({ seed, tip: tipFor[seed.name] })))
-          if (ahead === month) setSeason({ month: ahead, text: cal.seasonText, tip: cal.generalTips?.[0] })
+          const tipFor = Object.fromEntries((cal.seedTips || []).map(t => [t.seedName, t]))
+          setTodo([...seeds].sort(byUrgency).filter(s => tipFor[s.name]).slice(0, 3).map(seed => ({ seed, tip: tipFor[seed.name].tip, status: tipFor[seed.name].status })))
+          if (ahead === month) setSeason({ month: ahead, text: cal.seasonText, tip: cal.generalTips?.[0], status: cal.seasonStatus })
         } catch {
           setTodo([])
         }
@@ -68,7 +68,7 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
         if (ahead !== month) {
           try {
             const next = await callAi('/api/calendar-ai', { month: ahead, year: ahead === 0 ? now.getFullYear() + 1 : now.getFullYear(), seeds: [] })
-            setSeason({ month: ahead, text: next.seasonText, tip: next.generalTips?.[0] })
+            setSeason({ month: ahead, text: next.seasonText, tip: next.generalTips?.[0], status: next.seasonStatus })
           } catch { /* kortet visas inte */ }
         }
       })
@@ -99,7 +99,7 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (
-            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: 'var(--feature-bg)', border: 'none', borderRadius: '14px', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--on-feature)' }}>
+            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: 'var(--feature-bg)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--on-feature)' }}>
               <span aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--feature-bg-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: 'var(--on-feature)' }}>{s.icon}</span>
               <span className="t-body" style={{ fontSize: '18px', fontWeight: 500, color: 'var(--on-feature)' }}>{s.label}</span>
             </button>
@@ -112,21 +112,19 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
 
         {/* Höstbokslut */}
         {toReview > 0 && onOpenReview && (
-          <section style={{ background: 'var(--feature-bg)', borderRadius: '16px', padding: '18px', color: 'var(--on-feature)' }}>
+          <section className="card card--feature">
             <p className="t-label" style={{ margin: '0 0 8px', color: 'var(--on-feature)' }}>Höstbokslut {SEASON}</p>
             <p className="t-heading" style={{ margin: '0 0 6px', color: 'var(--on-feature)' }}>Dags att stänga säsongen</p>
             <p className="t-small" style={{ margin: '0 0 14px', color: 'var(--on-feature)' }}>
               Gå igenom {toReview === 1 ? 'årets sådd' : `årets ${toReview} sådder`}: vad blev bra, och vad blev inget? Det du lär dig följer med till nästa år.
             </p>
-            <button type="button" onClick={onOpenReview} className="t-body" style={{ background: 'var(--on-feature)', color: 'var(--feature-bg-light)', border: 'none', borderRadius: '10px', padding: '10px 16px', fontWeight: 700, cursor: 'pointer' }}>
-              Börja bokslutet
-            </button>
+            <Button variant="feature" onClick={onOpenReview}>Börja bokslutet</Button>
           </section>
         )}
 
         {/* Att göra nu */}
-        <section style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '16px', padding: '16px' }}>
-          <p className="t-label" style={{ color: muted, margin: '0 0 10px' }}>Att göra nu</p>
+        <section className="card">
+          <SectionLabel as="h3">Att göra nu</SectionLabel>
           {todo === null && <p className="t-small" style={{ color: muted, margin: 0 }}>Kollar dina fröer…</p>}
           {todo?.length === 0 && (
             <p className="t-prose" style={{ color: text, margin: 0 }}>Inget brådskande den här veckan. Njut av vilan.</p>
@@ -150,22 +148,20 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
 
         {/* Viktigt inför månaden */}
         {season?.text && (
-          <section style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '16px', padding: '16px' }}>
-            <p className="t-label" style={{ color: muted, margin: '0 0 10px' }}>
+          <section className="card">
+            <SectionLabel as="h3">
               {season.month === new Date().getMonth() ? 'Just nu i ' : 'Viktigt inför '}{MONTHS[season.month]}
-            </p>
+            </SectionLabel>
             <p className="t-prose" style={{ color: text, margin: 0 }}>{season.text}</p>
             {season.tip && <p className="t-small" style={{ color: text, margin: '10px 0 0' }}>{season.tip}</p>}
             {onOpenCalendar && (
-              <button type="button" onClick={onOpenCalendar} className="t-small" style={{ background: 'none', border: 'none', padding: 0, marginTop: '12px', color: muted, cursor: 'pointer', fontWeight: 700 }}>
-                Till kalendern →
-              </button>
+              <Button variant="link" onClick={onOpenCalendar} style={{ marginTop: '8px' }}>Till kalendern →</Button>
             )}
           </section>
         )}
 
         {(todo?.length > 0 || season?.text) && (
-          <p className="t-caption" style={{ color: muted, margin: '0 4px' }}>Tipsen är skrivna av AI och ännu inte granskade.</p>
+          <AiNote status={combinedStatus([...(todo || []).map(t => t.status), season?.text && season.status])} style={{ margin: '0 4px' }} />
         )}
       </div>
     </div>

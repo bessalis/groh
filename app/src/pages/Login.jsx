@@ -2,6 +2,7 @@ import { useState } from 'react'
 import plantImg from '../assets/brysselkal_seedling.png'
 import grohLogo from '../assets/groh.svg'
 import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui'
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -44,7 +45,7 @@ export default function Login({ onLogin }) {
         </h1>
         <p className="t-body" style={{ color: muted, margin: 0 }}>Din digitala trädgård</p>
       </div>
-      <div style={{ width: '100%', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '24px' }}>
+      <div className="card card--roomy" style={{ width: '100%' }}>
         <div style={{ display: 'flex', marginBottom: '24px', background: bg, borderRadius: '10px', padding: '4px' }}>
           <div onClick={() => { setMode('login'); setError('') }} style={{ flex: 1, padding: '8px', textAlign: 'center', borderRadius: '8px', background: mode === 'login' ? cardBg : 'transparent', cursor: 'pointer', fontSize: '13px', color: text }}>Logga in</div>
           <div onClick={() => { setMode('signup'); setError('') }} style={{ flex: 1, padding: '8px', textAlign: 'center', borderRadius: '8px', background: mode === 'signup' ? cardBg : 'transparent', cursor: 'pointer', fontSize: '13px', color: text }}>Skapa konto</div>
@@ -59,9 +60,9 @@ export default function Login({ onLogin }) {
         </div>
         {error && <p style={{ fontSize: '13px', color: 'var(--danger-text)', textAlign: 'center', margin: '0 0 12px' }}>{error}</p>}
         {success && <p style={{ fontSize: '13px', color: muted, textAlign: 'center', margin: '0 0 12px' }}>{success}</p>}
-        <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', padding: '13px', background: 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>
-          {loading ? '...' : mode === 'login' ? 'Logga in' : 'Skapa konto'}
-        </button>
+        <Button variant="primary" large full onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Vänta…' : mode === 'login' ? 'Logga in' : 'Skapa konto'}
+        </Button>
       </div>
     </div>
   )

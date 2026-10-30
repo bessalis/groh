@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '../components/ui'
 import { loadPending, saveReview, loadSummary, OUTCOMES, REASONS, SEASON } from '../lib/review'
 
 // Höstbokslut: ett frö i taget, tre val, sedan en sammanfattning.
@@ -70,7 +71,7 @@ export default function Review({ onDone }) {
         <p className="t-label" style={{ color: muted, margin: '0 0 6px' }}>Höstbokslut {SEASON}</p>
         <h1 className="t-display-l" style={{ color: text, margin: '0 0 16px' }}>Säsongen är stängd</h1>
         {summary && summary.length > 0 ? (
-          <div style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <p className="t-prose" style={{ color: text, margin: 0 }}>
               {summary.length} sådder: {count('good')} blev bra, {count('so_so')} sådär och {count('failed')} blev inget.
             </p>
@@ -82,14 +83,14 @@ export default function Review({ onDone }) {
           <p className="t-prose" style={{ color: text }}>Det fanns inga sådder att gå igenom i år.</p>
         )}
         <p className="t-small" style={{ color: muted, margin: '16px 0' }}>Fröpåsarna står kvar i Fröarkivet, redo för nästa år.</p>
-        <button type="button" onClick={onDone} className="t-body" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer' }}>Klar</button>
+        <Button variant="primary" large full onClick={onDone}>Klar</Button>
       </div>
     )
   }
 
   return (
     <div style={page}>
-      <button type="button" onClick={onDone} className="t-small" style={{ background: 'none', border: 'none', padding: 0, color: muted, cursor: 'pointer', marginBottom: '12px' }}>← Avbryt, fortsätt senare</button>
+      <Button variant="link" onClick={onDone} style={{ marginBottom: '12px' }}>← Avbryt, fortsätt senare</Button>
       <p className="t-label" style={{ color: muted, margin: '0 0 6px' }}>Höstbokslut {SEASON} · {index + 1} av {queue.length}</p>
       <div aria-hidden="true" style={{ height: 4, borderRadius: 2, background: border, margin: '0 0 20px' }}>
         <div style={{ height: '100%', width: `${(index / queue.length) * 100}%`, background: muted, borderRadius: 2 }} />
@@ -142,10 +143,10 @@ export default function Review({ onDone }) {
       {error && <p className="t-small" style={{ color: 'var(--danger-text)', margin: '12px 0 0' }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
-        <button type="button" onClick={() => next(true)} className="t-body" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '0.5px solid ' + border, background: 'transparent', color: text, cursor: 'pointer' }}>Hoppa över</button>
-        <button type="button" disabled={!outcome || saving} onClick={() => next(false)} className="t-body" style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: outcome ? 'var(--accent)' : 'var(--surface-raised)', color: outcome ? 'var(--on-accent)' : 'var(--text-subtle)', fontWeight: 700, cursor: outcome ? 'pointer' : 'default' }}>
+        <Button large onClick={() => next(true)} style={{ flex: 1 }}>Hoppa över</Button>
+        <Button variant="primary" large disabled={!outcome || saving} onClick={() => next(false)} style={{ flex: 2 }}>
           {saving ? 'Sparar…' : index + 1 === queue.length ? 'Spara och avsluta' : 'Spara och nästa'}
-        </button>
+        </Button>
       </div>
     </div>
   )

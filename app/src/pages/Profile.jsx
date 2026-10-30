@@ -50,7 +50,7 @@ export default function Profile({ onLogout }) {
         <h1 style={{ fontSize: 'var(--display-m)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>Profil</h1>
         <p style={{ fontSize: '13px', color: muted, margin: 0 }}>Hantera ditt konto</p>
       </div>
-      <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
+      <div className="card card--roomy" style={{ margin: '0 16px 12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--on-accent)">
@@ -71,14 +71,14 @@ export default function Profile({ onLogout }) {
           ))}
         </div>
       </div>
-      <div style={{ margin: '0 16px 12px', background: cardBg, border: '0.5px solid ' + border, borderRadius: '16px', padding: '20px' }}>
+      <div className="card card--roomy" style={{ margin: '0 16px 12px' }}>
         <ZonePicker zone={zone} chosen={chosen} onChange={changeZone} saving={savingZone}
           colors={{ text, muted, border, cardBg, activeBg: iconBg }} />
         {zoneError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--danger-text)' }}>{zoneError}</p>}
       </div>
       <div style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {menuItems.map((item, i) => (
-          <div key={i} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+          <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon name={item.icon} size={18} color={muted} />
             </div>
@@ -86,10 +86,10 @@ export default function Profile({ onLogout }) {
             <span style={{ color: muted, fontSize: '18px' }}>›</span>
           </div>
         ))}
-        <div onClick={handleLogout} style={{ background: cardBg, border: '0.5px solid ' + border, borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: '4px' }}>
-          <span style={{ fontSize: '15px', color: 'var(--danger-text)' }}>Logga ut</span>
-        </div>
-        <p style={{ textAlign: 'center', fontSize: '12px', color: border, marginTop: '8px' }}>Groh! · Version 1.0.0</p>
+        <button type="button" onClick={handleLogout} className="card t-body" style={{ textAlign: 'center', marginTop: '4px', color: 'var(--danger-text)' }}>
+          Logga ut
+        </button>
+        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '8px' }}>Groh! · Version 1.0.0</p>
       </div>
     </div>
   )

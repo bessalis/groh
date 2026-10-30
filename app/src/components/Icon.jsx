@@ -13,6 +13,7 @@ import Temperature from '../assets/temperature.svg?react'
 import Settings from '../assets/settings.svg?react'
 import Alerts from '../assets/alerts.svg?react'
 import Help from '../assets/help.svg?react'
+import Camera from '../assets/camera.svg?react'   // Phosphor (MIT), tillfällig till ikonrevisionen
 
 // Gränssnittsikonerna ligger som SVG-filer i assets/ med fill="currentColor",
 // samma mönster som CategoryIcon. Färgen tas från color (gärna en token,
@@ -23,6 +24,7 @@ const ICONS = {
   seed: Seed, seedling: Seedling, grown: Grown,
   mature: Mature, water: Water, temperature: Temperature,
   settings: Settings, alerts: Alerts, help: Help,
+  camera: Camera,
 }
 
 // Ikonerna står nästan alltid bredvid en text eller i en knapp med aria-label,

@@ -99,9 +99,9 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (
-            <button key={i} type="button" onClick={() => s.action === 'add' && onAdd && onAdd()} style={{ flex: 1, background: 'var(--feature-bg)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '14px 8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--on-feature)' }}>
-              <span aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--feature-bg-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: 'var(--on-feature)' }}>{s.icon}</span>
-              <span className="t-body" style={{ fontSize: '18px', fontWeight: 500, color: 'var(--on-feature)' }}>{s.label}</span>
+            <button key={i} type="button" className="action-tile" onClick={() => s.action === 'add' && onAdd && onAdd()}>
+              <span className="action-tile__icon" aria-hidden="true">{s.icon}</span>
+              <span>{s.label}</span>
             </button>
           ))}
         </div>

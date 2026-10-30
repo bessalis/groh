@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 import { Button, SectionLabel, AiNote } from '../components/ui'
+import { Icon } from '../components/Icon'
 
 export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
@@ -108,12 +109,12 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
 
       <div style={{ padding: '0 16px' }}>
         {!editSeed && onScan && (
-          <button type="button" className="card card--soft" onClick={onScan} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <span style={{ flex: 1 }}>
-              <span className="t-heading-s" style={{ display: 'block' }}>Fotografera fröpåsen</span>
-              <span className="t-caption" style={{ display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
+          <button type="button" className="action-tile action-tile--wide" onClick={onScan} style={{ marginBottom: '20px' }}>
+            <span className="action-tile__icon" aria-hidden="true"><Icon name="camera" size={22} color="currentColor" /></span>
+            <span className="action-tile__text">
+              <span>Fotografera fröpåsen</span>
+              <span className="action-tile__sub">AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
             </span>
-            <span aria-hidden="true" style={{ color: 'var(--text-muted)', fontSize: '18px' }}>›</span>
           </button>
         )}
         <SectionLabel>Namn</SectionLabel>

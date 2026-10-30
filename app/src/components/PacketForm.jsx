@@ -1,8 +1,8 @@
 import { SectionLabel } from './ui'
 import { MONTHS, AMOUNTS } from '../lib/scanForm'
 
-// Granskningsformuläret för en skannad fröpåse. Används av ScanPacket (en påse)
-// och BatchScan (flera). form/setForm i scanForm-format, amount separat.
+// Granskningsformuläret för en skannad fröpåse. Används av BatchScan, både för en
+// påse (som går direkt hit) och för flera. form/setForm i scanForm-format, amount separat.
 export default function PacketForm({ form, setForm, amount, setAmount, uncertain = [] }) {
   const unsure = new Set(uncertain)
   const check = key => unsure.has(key)

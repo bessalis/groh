@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 
-export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
+export default function AddSeed({ onBack, onSaved, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
@@ -29,12 +29,12 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
     })
   }, [])
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const border = dark ? '#2A2E24' : '#E8E4DA'
-  const inputBg = dark ? '#1A1C17' : '#FFFFFF'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const border = 'var(--border-color)'
+  const inputBg = 'var(--surface)'
   const inputStyle = { width: '100%', background: inputBg, border: '0.5px solid ' + border, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: text, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }
   const sectionLabel = { fontSize: '10px', color: muted, letterSpacing: '0.1em', margin: '0 0 10px' }
 
@@ -80,8 +80,8 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
 
   function Toggle({ value, onChange }) {
     return (
-      <div onClick={() => onChange(!value)} style={{ width: '36px', height: '20px', borderRadius: '10px', background: value ? '#4E6E44' : border, position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}>
-        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#F2F0E8', position: 'absolute', top: '2px', left: value ? '18px' : '2px', transition: 'left 0.2s' }} />
+      <div onClick={() => onChange(!value)} style={{ width: '36px', height: '20px', borderRadius: '10px', background: value ? 'var(--accent)' : 'var(--surface-raised)', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}>
+        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: '2px', left: value ? '18px' : '2px', transition: 'left 0.2s' }} />
       </div>
     )
   }
@@ -111,13 +111,13 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <input value={name} onChange={e => { setName(e.target.value); setAiDone(false) }} placeholder="t.ex. Luktärt Cupani" style={{ ...inputStyle, flex: 1 }} />
           <button onClick={lookupWithAI} disabled={aiLoading || !name.trim()}
-            style={{ background: aiDone ? '#1E3020' : '#2A3828', border: '0.5px solid ' + (aiDone ? '#4E6E44' : '#3B5E35'), borderRadius: '10px', padding: '0 14px', cursor: 'pointer', color: muted, fontSize: '12px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {aiLoading ? <div style={{ width: '14px', height: '14px', border: '1.5px solid #3B5E35', borderTopColor: '#7A9E6E', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : aiDone ? '✓ Klar' : 'AI-sök'}
+            style={{ background: aiDone ? 'var(--accent-soft)' : 'var(--accent-selected)', border: '0.5px solid ' + (aiDone ? 'var(--accent-border)' : 'var(--accent)'), borderRadius: '10px', padding: '0 14px', cursor: 'pointer', color: 'var(--text-accent)', fontSize: '12px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {aiLoading ? <div style={{ width: '14px', height: '14px', border: '1.5px solid var(--accent-border)', borderTopColor: 'var(--text-muted)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : aiDone ? '✓ Klar' : 'AI-sök'}
           </button>
         </div>
 
         {aiDone && (
-          <div style={{ background: dark ? '#1A2518' : '#E8EDE4', border: '0.5px solid ' + (dark ? '#2A3828' : '#C0D0B8'), borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '8px' }}>
+          <div style={{ background: 'var(--accent-soft)', border: '0.5px solid ' + 'var(--accent-border)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '8px' }}>
             <p style={{ fontSize: '12px', color: muted, margin: 0 }}>
               {factStatus === 'reviewed'
                 ? '✓ Fyllt i från granskad växtfakta. Justera nedan om något inte stämmer för just ditt frö.'
@@ -139,21 +139,21 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
         <div style={{ height: '0.5px', background: border, margin: '14px 0 20px' }} />
         <p style={sectionLabel}>DITT BETYG</p>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-          <div onClick={() => setThumb(thumb === 'up' ? null : 'up')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'up' ? '#4E6E44' : border), background: thumb === 'up' ? (dark ? '#1E3020' : '#E8EDE4') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>↑ Odla igen</div>
-          <div onClick={() => setThumb(thumb === 'down' ? null : 'down')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'down' ? '#7A2020' : border), background: thumb === 'down' ? (dark ? '#301010' : '#FFF0F0') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: thumb === 'down' ? '#E28080' : muted }}>↓ Tänk efter</div>
+          <div onClick={() => setThumb(thumb === 'up' ? null : 'up')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'up' ? 'var(--accent)' : border), background: thumb === 'up' ? 'var(--accent-soft)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>↑ Odla igen</div>
+          <div onClick={() => setThumb(thumb === 'down' ? null : 'down')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '0.5px solid ' + (thumb === 'down' ? 'var(--warn-border)' : border), background: thumb === 'down' ? 'var(--warn-bg)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: thumb === 'down' ? 'var(--warn-text)' : muted }}>↓ Tänk efter</div>
         </div>
 
         <div style={{ height: '0.5px', background: border, margin: '0 0 20px' }} />
         <p style={sectionLabel}>SÅDD</p>
         <div style={{ marginBottom: '8px' }}>
           <p style={{ fontSize: '12px', color: text, margin: '0 0 5px' }}>Sådatum</p>
-          <input type="date" value={sownDate} onChange={e => setSownDate(e.target.value)} style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }} />
+          <input type="date" value={sownDate} onChange={e => setSownDate(e.target.value)} style={{ ...inputStyle }} />
         </div>
         <div style={{ marginBottom: '20px' }}>
           <p style={{ fontSize: '12px', color: text, margin: '0 0 8px' }}>Typ av sådd</p>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <div onClick={() => setSowingType('indoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'indoor' ? '#4E6E44' : border), background: sowingType === 'indoor' ? (dark ? '#1E3020' : '#E8EDE4') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>Förrodling</div>
-            <div onClick={() => setSowingType('outdoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'outdoor' ? '#4E6E44' : border), background: sowingType === 'outdoor' ? (dark ? '#1E3020' : '#E8EDE4') : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>Direktsådd</div>
+            <div onClick={() => setSowingType('indoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'indoor' ? 'var(--accent)' : border), background: sowingType === 'indoor' ? 'var(--accent-soft)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>Förrodling</div>
+            <div onClick={() => setSowingType('outdoor')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '0.5px solid ' + (sowingType === 'outdoor' ? 'var(--accent)' : border), background: sowingType === 'outdoor' ? 'var(--accent-soft)' : inputBg, cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: muted }}>Direktsådd</div>
           </div>
         </div>
 
@@ -168,14 +168,14 @@ export default function AddSeed({ dark, onBack, onSaved, editSeed }) {
           <input value={companion} onChange={e => setCompanion(e.target.value)} placeholder="Vad gillar den som granne?" style={inputStyle} />
         </div>
 
-        {error && <p style={{ fontSize: '13px', color: '#E28080', textAlign: 'center', marginBottom: '12px' }}>{error}</p>}
+        {error && <p style={{ fontSize: '13px', color: 'var(--danger-text)', textAlign: 'center', marginBottom: '12px' }}>{error}</p>}
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 'min(358px, calc(100% - 32px))', display: 'flex', gap: '8px' }}>
         <button onClick={onBack} style={{ flex: 1, padding: '13px', background: 'transparent', border: '0.5px solid ' + border, borderRadius: '12px', color: muted, fontSize: '14px', cursor: 'pointer' }}>Avbryt</button>
-        <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: '13px', background: '#4E6E44', border: 'none', borderRadius: '12px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>{saving ? 'Sparar...' : editSeed ? 'Spara ändringar' : 'Lägg till frö'}</button>
+        <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: '13px', background: 'var(--accent)', border: 'none', borderRadius: '12px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}>{saving ? 'Sparar...' : editSeed ? 'Spara ändringar' : 'Lägg till frö'}</button>
       </div>
     </div>
   )

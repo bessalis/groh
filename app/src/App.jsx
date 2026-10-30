@@ -38,19 +38,15 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Samma bakgrund på hela sidan och i webbläsarens statusfält som i appen.
+  // Läget styr färgtokens via data-theme på <html>. Statusfältets färg
+  // (theme-color) måste vara en riktig färg, så den läses ut från --bg.
   useEffect(() => {
-    const appBg = dark ? '#12130F' : '#F2F0E8'
     const root = document.documentElement
-    root.style.setProperty('--app-bg', appBg)
+    root.dataset.theme = dark ? 'dark' : 'light'
     root.style.colorScheme = dark ? 'dark' : 'light'
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', appBg)
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim()
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
   }, [dark])
-
-  const navBg = dark ? '#12130F' : '#F2F0E8'
-  const navBorder = dark ? '#2A2E24' : '#E0DDD4'
-  const activeColor = '#7A9E6E'
-  const inactiveColor = dark ? '#4A5244' : '#A0A89A'
 
   function goTo(target) {
     setPage(target)
@@ -61,43 +57,43 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div style={{ background: dark ? '#12130F' : '#F2F0E8', minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', fontSize: 'var(--display-m)', color: '#7A9E6E' }}>Groh!</p>
+      <div style={{ background: 'var(--bg)', minHeight: '100vh', maxWidth: '390px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', fontSize: 'var(--display-m)', color: 'var(--text-muted)' }}>Groh!</p>
       </div>
     )
   }
 
   if (!user) {
-    return <Login dark={dark} onLogin={() => setUser(true)} />
+    return <Login onLogin={() => setUser(true)} />
   }
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: dark ? '#2A2E24' : '#E8E4DA', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
-        <Icon name={dark ? 'sun' : 'moon'} size={18} color={dark ? '#F2F0E8' : '#1E2018'} />
+      <button onClick={() => setDark(!dark)} aria-label={dark ? 'Byt till ljust läge' : 'Byt till mörkt läge'} style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', right: 'max(16px, calc((100vw - 390px) / 2 + 16px))', zIndex: 200, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-raised)', border: 'none', cursor: 'pointer', fontSize: '15px' }}>
+        <Icon name={dark ? 'sun' : 'moon'} size={18} color="var(--text)" />
       </button>
 
-      {page === 'home' && <Home dark={dark} onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} />}
-      {page === 'review' && <Review dark={dark} onDone={() => goTo('home')} />}
+      {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} />}
+      {page === 'review' && <Review onDone={() => goTo('home')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
-        <SeedArchive dark={dark} onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
+        <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
       {page === 'seeds' && addingSeed && (
-        <AddSeed dark={dark} onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} editSeed={editingSeed} />
+        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
-        <SeedDetail seed={selectedSeed} dark={dark} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />
+        <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />
       )}
-      {page === 'calendar' && <Calendar dark={dark} />}
-      {page === 'profile' && <Profile dark={dark} onLogout={() => supabase.auth.signOut()} />}
+      {page === 'calendar' && <Calendar />}
+      {page === 'profile' && <Profile onLogout={() => supabase.auth.signOut()} />}
 
-      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: navBg, borderTop: '0.5px solid ' + navBorder, display: 'flex', justifyContent: 'space-around', padding: '10px max(0px, calc((100% - 390px) / 2)) calc(14px + env(safe-area-inset-bottom))', zIndex: 100 }}>
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg)', borderTop: 'var(--border)', display: 'flex', justifyContent: 'space-around', padding: '10px max(0px, calc((100% - 390px) / 2)) calc(14px + env(safe-area-inset-bottom))', zIndex: 100 }}>
         {NAV_ITEMS.map(item => {
           const active = page === item.id && !selectedSeed && !addingSeed
           return (
             <div key={item.id} onClick={() => goTo(item.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', minWidth: '60px' }}>
-              <Icon name={item.icon} size={22} color={active ? activeColor : inactiveColor} />
-              <span style={{ fontSize: '10px', color: active ? activeColor : inactiveColor, fontFamily: 'var(--font-body)' }}>{item.label}</span>
+              <Icon name={item.icon} size={22} color={active ? 'var(--text-accent)' : 'var(--text-subtle)'} />
+              <span style={{ fontSize: '10px', color: active ? 'var(--text-accent)' : 'var(--text-subtle)', fontFamily: 'var(--font-body)' }}>{item.label}</span>
             </div>
           )
         })}

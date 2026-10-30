@@ -63,7 +63,7 @@ function autoPhase(sownDate) {
   return 'seedling'
 }
 
-export default function SeedDetail({ seed, dark, onBack, onEdit }) {
+export default function SeedDetail({ seed, onBack, onEdit }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [currentPhase, setCurrentPhase] = useState(
     seed.current_phase || autoPhase(seed.sown_date) || 'seed'
@@ -85,12 +85,12 @@ export default function SeedDetail({ seed, dark, onBack, onEdit }) {
     setTimeout(() => setSavedNotes(false), 2000)
   }
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const borderColor = dark ? '#2A2E24' : '#E8E4DA'
-  const iconBg = dark ? '#1E3020' : '#E8EDE4'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const borderColor = 'var(--border-color)'
+  const iconBg = 'var(--accent-soft)'
 
   const care = CARE_DATA[seed.species] || { water: '-', light: '-', temp: '-' }
 
@@ -130,16 +130,16 @@ function getImage() {
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' }}>
 
       <div style={{ position: 'relative' }}>
-        <div style={{ height: '260px', background: dark ? '#1A1C17' : '#E8EDE4', overflow: 'hidden' }}>
+        <div style={{ height: '260px', background: 'var(--surface-muted)', overflow: 'hidden' }}>
           <img src={getImage()} alt={seed.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => { e.target.src = images['../assets/fallback_growing.png']?.default }} />
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 50%, ' + bg + ')' }} />
         </div>
-        <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>
+        <button onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px', background: 'var(--scrim)', border: 'none', borderRadius: '20px', padding: '6px 14px', color: 'var(--paper-dark)', fontSize: '13px', cursor: 'pointer' }}>
           ← Tillbaka
         </button>
-        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '60px', background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1, zIndex: 10 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? '#F2F0E8' : 'none'} stroke="#F2F0E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <button onClick={handleToggleFavorite} style={{ position: 'absolute', top: '16px', right: '60px', background: 'var(--scrim)', border: 'none', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', lineHeight: 1, zIndex: 10 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? 'var(--paper-dark)' : 'none'} stroke="var(--paper-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>
         </button>
@@ -150,7 +150,7 @@ function getImage() {
         <p style={{ fontSize: '15px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', margin: '0 0 20px' }}>{seed.species}</p>
 
         {seed.sown_date && (
-          <div style={{ background: dark ? '#1A2518' : '#E8EDE4', border: '0.5px solid ' + (dark ? '#2A3828' : '#C0D0B8'), borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ background: 'var(--accent-soft)', border: '0.5px solid ' + 'var(--accent-border)', borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
             <span style={{ fontSize: '18px' }}>🌱</span>
             <div>
               <p style={{ margin: 0, fontSize: '13px', color: text }}>
@@ -176,15 +176,15 @@ function getImage() {
                 <div key={phase.id}
                   onClick={() => handlePhaseChange(phase.id)}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1, cursor: 'pointer' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: active ? '#4E6E44' : passed ? '#2A3828' : (dark ? '#1A1C17' : '#F0EDE6'), border: '2px solid ' + (active ? '#7A9E6E' : passed ? '#3B5E35' : borderColor), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                    <Icon name={phase.icon} size={16} color={active ? '#F2F0E8' : muted} />
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: active ? 'var(--accent)' : passed ? 'var(--accent-selected)' : 'var(--surface-muted)', border: '2px solid ' + (active ? 'var(--accent)' : passed ? 'var(--accent-border)' : borderColor), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                    <Icon name={phase.icon} size={16} color={active ? 'var(--on-accent)' : muted} />
                   </div>
-                  <span style={{ fontSize: '10px', color: active ? muted : passed ? '#4A5244' : borderColor }}>{phase.label}</span>
+                  <span style={{ fontSize: '10px', color: active ? 'var(--text-accent)' : passed ? 'var(--text-muted)' : 'var(--text-subtle)' }}>{phase.label}</span>
                 </div>
               )
             })}
           </div>
-          <p style={{ fontSize: '10px', color: borderColor, margin: '12px 0 0', textAlign: 'center' }}>
+          <p style={{ fontSize: '11px', color: 'var(--text-subtle)', margin: '12px 0 0', textAlign: 'center' }}>
             Tryck på en fas för att uppdatera
           </p>
         </div>
@@ -197,7 +197,7 @@ function getImage() {
               { icon: 'sun', label: 'Ljus', value: care.light },
               { icon: 'temperature', label: 'Temp', value: care.temp },
             ].map((item, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: dark ? '#1A1C17' : '#F6F4EC', borderRadius: '10px', padding: '12px 6px' }}>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: 'var(--surface-muted)', borderRadius: '10px', padding: '12px 6px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name={item.icon} size={18} color={muted} />
                 </div>
@@ -212,7 +212,7 @@ function getImage() {
           <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 8px' }}>NÄSTA STEG</p>
           <p style={{ fontSize: '14px', color: text, margin: 0, lineHeight: 1.5 }}>{NEXT_STEP[currentPhase]}</p>
           {seed.frost_sensitive && (
-            <p style={{ fontSize: '13px', color: '#E28080', margin: '8px 0 0', lineHeight: 1.5 }}>⚠ Frostkänslig – vänta tills nattfrosten är över innan utplantering.</p>
+            <p style={{ fontSize: '13px', color: 'var(--warn-text)', margin: '8px 0 0', lineHeight: 1.5 }}>⚠ Frostkänslig – vänta tills nattfrosten är över innan utplantering.</p>
           )}
         </div>
 
@@ -220,8 +220,8 @@ function getImage() {
           <div style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '12px' }}>
             <p style={{ fontSize: '11px', color: muted, letterSpacing: '0.08em', margin: '0 0 10px' }}>ATT TÄNKA PÅ</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {seed.frost_sensitive && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: dark ? '#301010' : '#FFF0E8', color: '#E28080', border: '0.5px solid #7A2020' }}>Frostkänslig</span>}
-              {seed.requires_pretreatment && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: dark ? '#1E1A30' : '#F0EEFF', color: '#9F99CC', border: '0.5px solid #534AB7' }}>Förbehandling krävs</span>}
+              {seed.frost_sensitive && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--warn-bg)', color: 'var(--warn-text)', border: '0.5px solid var(--warn-border)' }}>Frostkänslig</span>}
+              {seed.requires_pretreatment && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--info-bg)', color: 'var(--info-text)', border: '0.5px solid var(--info-border)' }}>Förbehandling krävs</span>}
             </div>
           </div>
         )}
@@ -235,7 +235,7 @@ function getImage() {
             style={{ width: '100%', minHeight: '80px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '8px', padding: '8px 10px', fontSize: '14px', color: text, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-            <button onClick={handleSaveNotes} style={{ padding: '7px 16px', background: '#4E6E44', border: 'none', borderRadius: '8px', color: '#F2F0E8', fontSize: '13px', cursor: 'pointer' }}>
+            <button onClick={handleSaveNotes} style={{ padding: '7px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: 'var(--on-accent)', fontSize: '13px', cursor: 'pointer' }}>
               Spara
             </button>
             {savedNotes && <span style={{ fontSize: '12px', color: muted }}>Sparat!</span>}
@@ -251,13 +251,13 @@ function getImage() {
           Arkivera frö
         </button>
         {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ width: '100%', padding: '10px', background: 'transparent', border: 'none', borderRadius: '12px', color: '#E24B4A', fontSize: '13px', cursor: 'pointer' }}>
+          <button onClick={() => setConfirmDelete(true)} style={{ width: '100%', padding: '10px', background: 'transparent', border: 'none', borderRadius: '12px', color: 'var(--danger-text)', fontSize: '13px', cursor: 'pointer' }}>
             Ta bort frö permanent
           </button>
         ) : (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '0.5px solid ' + borderColor, borderRadius: '12px', color: muted, fontSize: '13px', cursor: 'pointer' }}>Avbryt</button>
-            <button onClick={handleDelete} style={{ flex: 1, padding: '10px', background: '#C0392B', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', cursor: 'pointer' }}>Ja, ta bort</button>
+            <button onClick={handleDelete} style={{ flex: 1, padding: '10px', background: 'var(--danger)', border: 'none', borderRadius: '12px', color: 'var(--on-danger)', fontSize: '13px', cursor: 'pointer' }}>Ja, ta bort</button>
           </div>
         )}
       </div>

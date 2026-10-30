@@ -30,32 +30,32 @@ function getPhase(sownDate) {
   return 'mature'
 }
 
-function SeedImage({ name, species, sownDate, currentPhase, dark }) {
+function SeedImage({ name, species, sownDate, currentPhase }) {
   const file = IMG_MAP[species] || 'fallback'
   const phase = currentPhase || getPhase(sownDate)
   const fallback = images['../assets/fallback_growing.png']?.default
   const src = images['../assets/' + file + '_' + phase + '.png']?.default || fallback
   return (
-    <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: dark ? '#2A2E24' : '#E8E4DA' }}>
+    <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: 'var(--surface-raised)' }}>
       <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onError={e => { if (e.target.src !== fallback) e.target.src = fallback }} />
     </div>
   )
 }
 
-export default function SeedArchive({ dark, onSelect, onAdd }) {
+export default function SeedArchive({ onSelect, onAdd }) {
   const [seeds, setSeeds] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [swipedId, setSwipedId] = useState(null)
 
-  const bg = dark ? '#12130F' : '#F2F0E8'
-  const cardBg = dark ? '#1A1C17' : '#FFFFFF'
-  const text = dark ? '#F2F0E8' : '#1E2018'
-  const muted = dark ? '#7A9E6E' : '#7A9E6E'
-  const borderColor = dark ? '#2A2E24' : '#E8E4DA'
-  const inputBg = dark ? '#1A1C17' : '#FFFFFF'
-  const btnBg = dark ? '#4E6E44' : '#3B5E35'
+  const bg = 'var(--bg)'
+  const cardBg = 'var(--surface)'
+  const text = 'var(--text)'
+  const muted = 'var(--text-muted)'
+  const borderColor = 'var(--border-color)'
+  const inputBg = 'var(--surface)'
+  const btnBg = 'var(--accent)'
 
   const [compost, setCompost] = useState(false)
 
@@ -103,14 +103,14 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
   }
 
   function statusLabel(seed) {
-    if (seed.thumb === 'down') return { label: 'Tänk efter', color: '#E24B4A' }
+    if (seed.thumb === 'down') return { label: 'Tänk efter', color: 'var(--danger-text)' }
     if (seed.sown_date) {
       const phase = phaseLabel(seed.sown_date)
       const date = new Date(seed.sown_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
       return { label: phase + ' · Sått ' + date, color: muted }
     }
-    if (seed.frost_sensitive) return { label: 'Frostkänslig', color: '#EF9F27' }
-    if (seed.requires_pretreatment) return { label: 'Förbehandling', color: '#7F77DD' }
+    if (seed.frost_sensitive) return { label: 'Frostkänslig', color: 'var(--warn-text)' }
+    if (seed.requires_pretreatment) return { label: 'Förbehandling', color: 'var(--info-text)' }
     return { label: 'Klar att så', color: muted }
   }
 
@@ -140,18 +140,18 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
 
     return (
       <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', marginBottom: '8px' }}>
-        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '90px', background: '#C0392B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '0 14px 14px 0' }}
+        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '90px', background: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '0 14px 14px 0' }}
           onClick={() => archiveSeed(seed.id)}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px' }}>📦</div>
-            <div style={{ fontSize: '10px', color: '#fff', marginTop: '2px' }}>Arkivera</div>
+            <div style={{ fontSize: '10px', color: 'var(--on-danger)', marginTop: '2px' }}>Arkivera</div>
           </div>
         </div>
         <div
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
           style={{ background: cardBg, border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
-        <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} dark={dark} />
+        <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: 'var(--display-s)', color: text, lineHeight: 1.1, fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em' }}>{seed.name}</p>
             <p style={{ margin: '0 0 4px', fontSize: '14px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic' }}>{seed.species}</p>
@@ -178,7 +178,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
         <div role="tablist" aria-label="Visa" style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
           {[[false, 'Fröer'], [true, 'Komposten']].map(([value, label]) => (
             <button key={label} type="button" role="tab" aria-selected={compost === value} onClick={() => switchTab(value)} className="t-small"
-              style={{ padding: '8px 14px', borderRadius: '999px', cursor: 'pointer', border: '0.5px solid ' + (compost === value ? muted : borderColor), background: compost === value ? (dark ? '#2A4030' : '#D4E4CC') : 'transparent', color: text, fontWeight: compost === value ? 700 : 400 }}>
+              style={{ padding: '8px 14px', borderRadius: '999px', cursor: 'pointer', border: '0.5px solid ' + (compost === value ? muted : borderColor), background: compost === value ? 'var(--accent-selected)' : 'transparent', color: text, fontWeight: compost === value ? 700 : 400 }}>
               {label}
             </button>
           ))}
@@ -188,7 +188,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
             style={{ width: '100%', padding: '12px 16px', background: inputBg, border: '0.5px solid ' + borderColor, borderRadius: '12px', fontSize: '14px', color: text, outline: 'none', boxSizing: 'border-box' }} />
         </div>
         <button onClick={() => onAdd && onAdd()}
-          style={{ width: '100%', padding: '14px', background: btnBg, border: 'none', borderRadius: '12px', color: '#F2F0E8', fontSize: '15px', fontWeight: 500, cursor: 'pointer', marginBottom: '20px' }}>
+          style={{ width: '100%', padding: '14px', background: btnBg, border: 'none', borderRadius: '12px', color: 'var(--on-accent)', fontSize: '15px', fontWeight: 500, cursor: 'pointer', marginBottom: '20px' }}>
           + Lägg till frö
         </button>
       </div>
@@ -200,7 +200,7 @@ export default function SeedArchive({ dark, onSelect, onAdd }) {
         )}
         {!compost && filtered.map(seed => <SwipeCard key={seed.id} seed={seed} />)}
         {compost && filtered.map(seed => (
-          <div key={seed.id} style={{ background: dark ? '#1A1C17' : '#FFFFFF', border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div key={seed.id} style={{ background: 'var(--surface)', border: '0.5px solid ' + borderColor, borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="t-heading-s" style={{ color: text, margin: 0 }}>{seed.name}</p>
               {seed.thumb_note && <p className="t-caption" style={{ color: muted, margin: '2px 0 0' }}>{seed.thumb_note}</p>}

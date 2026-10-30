@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 import PacketForm from '../components/PacketForm'
+import DuplicateChoice from '../components/DuplicateChoice'
+import { findDuplicate, defaultChoice, mergePatch, norm } from '../lib/duplicates'
 import { compressPhoto } from '../lib/photo'
 import {
   startScan, uploadPhoto, readPacket, saveItem, updateItem, confirmPacket,
-  setScanStatus, abandonScan, loadScanItems, downloadPhoto,
+  setScanStatus, abandonScan, loadScanItems, downloadPhoto, loadMySeeds,
 } from '../lib/scan'
 import { toForm, toValues, errorText, seedFrom, uncertainLabels } from '../lib/scanForm'
 
@@ -33,6 +35,9 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
   const [swapFor, setSwapFor] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [mySeeds, setMySeeds] = useState([])
+
+  useEffect(() => { loadMySeeds().then(setMySeeds).catch(() => {}) }, [])
   const scanIdRef = useRef(resumeScanId || null)
   const previewsRef = useRef([])
 
@@ -168,19 +173,37 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
   }
 
   const active = items.filter(it => it.status === 'pending')
+
+  // Dubbletter: mot fröer användaren redan har, och mot tidigare påsar i samma batch.
+  function duplicateOf(it) {
+    if (it.readState !== 'read' || !it.form) return { existing: null, choice: 'new', sameAs: null }
+    const values = toValues(it.form)
+    const existing = findDuplicate(values, mySeeds)
+    const key = norm(values.name) + '|' + norm(values.cultivar)
+    const sameAs = active.find(o => o.position < it.position && o.readState === 'read' && o.form
+      && norm(toValues(o.form).name) + '|' + norm(toValues(o.form).cultivar) === key) || null
+    return { existing, choice: existing ? (it.choice ?? defaultChoice(existing)) : 'new', sameAs }
+  }
+
   const ready = active.filter(it => it.readState === 'read' && toValues(it.form).name)
   const notReady = active.length - ready.length
 
   async function saveAll() {
     setSaving(true); setError('')
     let saved = 0
+    // Kompletteras samma frö av flera påsar fyller den andra bara i det den första lämnade tomt.
+    const current = new Map(mySeeds.map(sd => [sd.id, { ...sd }]))
     for (const it of ready) {
       const values = toValues(it.form)
+      const seed = seedFrom(values, it.amount, { frontPath: it.frontPath, backPath: it.backPath })
+      const { existing, choice } = duplicateOf(it)
+      const mergeInto = existing && choice === 'merge' ? current.get(existing.id) : null
       try {
         await confirmPacket({
           scanId: scanIdRef.current, itemId: it.itemId, reading: it.reading, final: values, finish: false,
-          seed: seedFrom(values, it.amount, { frontPath: it.frontPath, backPath: it.backPath }),
+          seed, mergeInto,
         })
+        if (mergeInto) Object.assign(mergeInto, mergePatch(mergeInto, seed))
         patch(it.position, { status: 'confirmed' })
         saved++
       } catch {
@@ -295,6 +318,8 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
             </AiNote>
             <ItemList
               items={active}
+              duplicateOf={duplicateOf}
+              onChoose={(it, c) => patch(it.position, { choice: c })}
               onEdit={it => { setEditIndex(items.indexOf(it)); setStep('edit') }}
               onRemove={remove}
               onReread={reread}
@@ -309,7 +334,7 @@ export default function BatchScan({ resumeScanId, onBack, onSaved }) {
             )}
             <div style={bottomBar}>
               <Button variant="primary" large full disabled={saving || ready.length === 0} onClick={saveAll}>
-                {saving ? 'Sparar…' : `Spara ${ready.length} ${ready.length === 1 ? 'frö' : 'fröer'}`}
+                {saving ? 'Sparar…' : `Spara ${ready.length} ${ready.length === 1 ? 'påse' : 'påsar'}`}
               </Button>
             </div>
           </>
@@ -351,12 +376,13 @@ function Thumbs({ front, back }) {
   )
 }
 
-function ItemList({ items, onEdit, onRemove, onReread, swapFor, onSwapStart, onSwap }) {
+function ItemList({ items, onEdit, onRemove, onReread, swapFor, onSwapStart, onSwap, duplicateOf, onChoose }) {
   return (
     <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {items.map(it => {
         const unsure = uncertainLabels(it.reading)
         const mismatch = it.reading?.back_matches === false
+        const dup = duplicateOf ? duplicateOf(it) : { existing: null, sameAs: null }
         const name = it.form ? toValues(it.form).name : null
         const sub = it.form ? [toValues(it.form).cultivar, toValues(it.form).supplier].filter(Boolean).join(' · ') : ''
         const others = items.filter(o => o.position !== it.position && o.back)
@@ -373,12 +399,23 @@ function ItemList({ items, onEdit, onRemove, onReread, swapFor, onSwapStart, onS
                   {it.readState === 'failed' && <span style={{ color: 'var(--danger-text)' }}>{it.error || 'Kunde inte läsas'}</span>}
                   {it.readState === 'read' && !it.back && <span style={{ color: 'var(--text-muted)' }}>Ingen baksida</span>}
                   {it.readState === 'read' && mismatch && <span className="field-check">Baksidan verkar höra till en annan påse</span>}
+                  {dup.sameAs && <span className="field-check">Samma sort som påse {dup.sameAs.position}</span>}
                   {it.readState === 'read' && unsure.length > 0 && !it.reviewed && <span className="field-check">Kontrollera: {unsure.join(', ')}</span>}
                   {it.readState === 'read' && !name && <span className="field-check">Namn saknas</span>}
                   {it.reviewed && <span style={{ color: 'var(--text-accent)', fontWeight: 700 }}>Granskad</span>}
                 </p>
               </div>
             </div>
+            {dup.existing && onChoose && (
+              <div style={{ marginTop: '10px' }}>
+                <DuplicateChoice existing={dup.existing} choice={dup.choice} onChoose={c => onChoose(it, c)} name={`dup-${it.position}`}
+                  alreadyBy={(() => {
+                    const earlier = items.find(o => o.position < it.position && duplicateOf(o).existing?.id === dup.existing.id && duplicateOf(o).choice === 'merge')
+                    return earlier ? earlier.position : null
+                  })()}
+                  patch={mergePatch(dup.existing, seedFrom(toValues(it.form), it.amount, { frontPath: it.frontPath, backPath: it.backPath }))} />
+              </div>
+            )}
             {onEdit && it.readState !== 'reading' && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
                 {it.readState === 'read' && <Button onClick={() => onEdit(it)}>Granska</Button>}

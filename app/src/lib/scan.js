@@ -2,6 +2,7 @@
 // användarens rättningar i seed_scans och seed_scan_items. Se CLAUDE.md.
 import { supabase } from './supabase'
 import { callAi } from './api'
+import { mergePatch, SEED_FIELDS } from './duplicates'
 
 const BUCKET = 'seed-packets'
 
@@ -50,20 +51,39 @@ export function corrections(reading, final) {
 }
 
 /**
- * Sparar fröet och markerar påsen som bekräftad och skanningen som klar.
+ * Sparar påsen och markerar den som bekräftad (och skanningen som klar om finish).
  * final: formulärets värden i samma form som AI:ns läsning, för att spara vad som rättats.
+ * mergeInto: ett befintligt frö att komplettera i stället för att skapa ett nytt.
+ * Då fylls bara tomma fält i (se mergePatch i lib/duplicates.js).
  */
-export async function confirmPacket({ scanId, itemId, seed, reading, final, finish = true }) {
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data, error } = await supabase.from('seeds')
-    .insert({ ...seed, user_id: user.id, is_archived: false, source: 'scan' })
-    .select('id').single()
-  if (error) throw error
+export async function confirmPacket({ scanId, itemId, seed, reading, final, finish = true, mergeInto = null }) {
+  let seedId
+  if (mergeInto) {
+    const patch = mergePatch(mergeInto, seed)
+    if (Object.keys(patch).length) {
+      const { error } = await supabase.from('seeds').update(patch).eq('id', mergeInto.id)
+      if (error) throw error
+    }
+    seedId = mergeInto.id
+  } else {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error } = await supabase.from('seeds')
+      .insert({ ...seed, user_id: user.id, is_archived: false, source: 'scan' })
+      .select('id').single()
+    if (error) throw error
+    seedId = data.id
+  }
   await supabase.from('seed_scan_items')
-    .update({ status: 'confirmed', seed_id: data.id, corrections: corrections(reading, final) })
+    .update({ status: 'confirmed', seed_id: seedId, corrections: corrections(reading, final) })
     .eq('id', itemId)
   if (finish) await setScanStatus(scanId, 'done')
-  return data.id
+  return seedId
+}
+
+/** Användarens fröer (inte komposten), för att hitta dubbletter. */
+export async function loadMySeeds() {
+  const { data } = await supabase.from('seeds').select(SEED_FIELDS).eq('is_archived', false)
+  return data || []
 }
 
 export async function abandonScan(scanId) {

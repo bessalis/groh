@@ -1,5 +1,6 @@
 import { Icon } from './components/Icon'
 import AddSeed from './pages/AddSeed'
+import ScanPacket from './pages/ScanPacket'
 import SeedDetail from './pages/SeedDetail'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
@@ -23,6 +24,7 @@ export default function App() {
   const [dark, setDark] = useState(true)
   const [selectedSeed, setSelectedSeed] = useState(null)
   const [addingSeed, setAddingSeed] = useState(false)
+  const [scanning, setScanning] = useState(false)
   const [editingSeed, setEditingSeed] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -52,6 +54,7 @@ export default function App() {
     setPage(target)
     setSelectedSeed(null)
     setAddingSeed(false)
+    setScanning(false)
     setEditingSeed(null)
   }
 
@@ -78,8 +81,11 @@ export default function App() {
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
       )}
-      {page === 'seeds' && addingSeed && (
-        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} editSeed={editingSeed} />
+      {page === 'seeds' && addingSeed && scanning && (
+        <ScanPacket onBack={() => setScanning(false)} onManual={() => setScanning(false)} onSaved={() => { setScanning(false); setAddingSeed(false) }} />
+      )}
+      {page === 'seeds' && addingSeed && !scanning && (
+        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={() => setScanning(true)} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
         <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />

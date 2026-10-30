@@ -4,7 +4,7 @@ import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 
-export default function AddSeed({ onBack, onSaved, editSeed }) {
+export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
@@ -106,6 +106,15 @@ export default function AddSeed({ onBack, onSaved, editSeed }) {
       </div>
 
       <div style={{ padding: '0 16px' }}>
+        {!editSeed && onScan && (
+          <button type="button" className="card card--soft" onClick={onScan} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <span style={{ flex: 1 }}>
+              <span className="t-heading-s" style={{ display: 'block' }}>Fotografera fröpåsen</span>
+              <span className="t-caption" style={{ display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>AI läser av namn, sort och såinformation. Du granskar innan något sparas.</span>
+            </span>
+            <span aria-hidden="true" style={{ color: 'var(--text-muted)', fontSize: '18px' }}>›</span>
+          </button>
+        )}
         <SectionLabel>Namn</SectionLabel>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <input value={name} onChange={e => { setName(e.target.value); setAiDone(false) }} placeholder="t.ex. Luktärt Cupani" style={{ ...inputStyle, flex: 1 }} />

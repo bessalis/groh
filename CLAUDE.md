@@ -40,6 +40,17 @@ npm run lint
 
 Projektet ligger i Supabase-regionen Stockholm (eu-north-1). Grundschemat finns i `supabase/migrations/20261028000000_initial_schema.sql`. Nya ändringar görs som migreringsfiler i `supabase/migrations/` med Supabase CLI, så att schemat finns i repot. Varje ny tabell ska ha Row Level Security påslaget och policyer som begränsar läsning och skrivning till rätt användare. Testa mot en separat utvecklingsdatabas, inte produktion.
 
+### Växtdatamodellen (fas 1)
+
+Se `supabase/migrations/20261030120000_plant_data_model.sql`.
+
+- **Delat, per art:** `plant_facts` (latinskt namn, svenskt namn, familj) med kategorin i `species_categories`.
+- **Delat, per sort:** `plant_varieties`, nyckel `'<artnyckel>|<sortnamn normaliserat>'`. Sådata (såmånader inne/ute, groningstid, sådjup, ljusgroning) och utseende (höjd, bredd, blomfärg, blomningsmånader). Nyckeln är också bildnyckel för illustrationen, med artens bild som reserv. Bara serverfunktionerna skriver.
+- **Användarens fröpåse:** `seeds` med `variety_key`, `cultivar`, `supplier`, `packed_for_season` (årgång), `best_before`, `amount` (`full`, `half`, `little`, `empty`, ungefärligt med flit), påsens egna sådata i samma kolumnnamn som sorten, `front_photo_path`, `back_photo_path` och `source` (`manual`/`scan`).
+- **Påsen gäller:** det som står på påsen går före sortens delade data, som bara fyller i det som saknas. Använd `sowingFor(seed, variety)` i `app/src/lib/packet.js`, som också säger var varje uppgift kommer ifrån (för AI-märkningen).
+- **Skanning:** `seed_scans` (ett batchläge, status `capturing` → `reviewing` → `done`) och `seed_scan_items` (en påse: fram- och baksidesfoto, `ai_reading` orörd, användarens `corrections` ovanpå, `status` och `seed_id` när påsen bekräftats). Går att pausa och fortsätta.
+- **Påsfoton:** privat bucket `seed-packets`, en mapp per användare (`<user_id>/<scan_id>/<position>-front.webp`). Båda sidorna sparas. Komprimera till WebP före uppladdning, högst 2 MB.
+
 ## Bilder
 
 Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i ett ChatGPT-projekt. Generera aldrig nya illustrationer själv.

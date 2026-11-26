@@ -13,6 +13,7 @@ import './styles/tokens.css'
 
 // Skanningen laddas först när den öppnas, så att startsidan förblir lätt.
 const BatchScan = lazy(() => import('./pages/BatchScan'))
+const SeedImages = lazy(() => import('./pages/SeedImages'))
 
 const NAV_ITEMS = [
   { id: 'home',     label: 'Hem',     icon: 'home'      },
@@ -95,7 +96,8 @@ export default function App() {
         <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />
       )}
       {page === 'calendar' && <Calendar />}
-      {page === 'profile' && <Profile onLogout={() => supabase.auth.signOut()} />}
+      {page === 'profile' && <Profile onLogout={() => supabase.auth.signOut()} onOpenSeedImages={() => goTo('seed-images')} />}
+      {page === 'seed-images' && <Suspense fallback={null}><SeedImages onBack={() => goTo('profile')} /></Suspense>}
 
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg)', borderTop: 'var(--border)', display: 'flex', justifyContent: 'space-around', padding: '10px max(0px, calc((100% - 390px) / 2)) calc(14px + env(safe-area-inset-bottom))', zIndex: 100 }}>
         {NAV_ITEMS.map(item => {

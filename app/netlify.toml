@@ -4,3 +4,7 @@
 
 [functions]
   directory = "netlify/functions"
+  # sharp (bildbehandlingen i /api/seed-image) har en inbyggd binär för Linux
+  # som inte går att bunta ihop. Den skickas med som den är.
+  external_node_modules = ["sharp"]
+  included_files = ["node_modules/sharp/**", "node_modules/@img/**"]

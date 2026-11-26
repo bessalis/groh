@@ -1,11 +1,13 @@
 import { randomBytes } from 'node:crypto'
 import { requireUser, readJson, cleanText, json } from '../lib/auth.js'
-import { dbAvailable, normalizeName, findFactsByKey, findVariety, signedUploadUrl, downloadObject, uploadObject, publicUrl, saveSeedImage } from '../lib/db.js'
+import { dbAvailable, normalizeName, rest, findFactsByKey, findVariety, signedUploadUrl, downloadObject, uploadObject, publicUrl, saveSeedImage } from '../lib/db.js'
 import { normalizeSeedImage, SIZES } from '../lib/normalize.js'
+import { computeQueue } from '../lib/imageQueue.js'
 
 // Fröbilder: bara för admin (app_metadata.role = 'admin', sätts i Supabase).
 // Uppladdning = godkännande. Ingen AI, bara bildbehandling.
 //
+//   { action: 'queue' }             → sorter och arter som saknar bild, flest användare först
 //   { action: 'upload-url', key }   → engångslänk för originalet i seed-image-originals
 //   { action: 'publish', key, originalPath }
 //        → normaliserar originalet, lägger två WebP med slumpnamn i den publika
@@ -36,6 +38,22 @@ export default async (req) => {
   if (!dbAvailable()) return json({ error: 'Databasnyckeln saknas i Netlify' }, 500)
 
   const body = await readJson(req)
+
+  if (body?.action === 'queue') {
+    // Alla användares fröer (inte komposten), bara de fält som behövs för att räkna.
+    const [seeds, varieties, facts, names, images] = await Promise.all([
+      rest('seeds?is_archived=eq.false&select=user_id,variety_key,species,name'),
+      rest('plant_varieties?select=key,species_key'),
+      rest('plant_facts?select=key'),
+      rest('plant_names?select=name,key'),
+      rest('seed_images?select=key'),
+    ])
+    return Response.json(computeQueue({
+      seeds: seeds || [], varieties: varieties || [], factKeys: (facts || []).map(f => f.key),
+      names: names || [], imageKeys: (images || []).map(i => i.key),
+    }))
+  }
+
   const key = normalizeName(cleanText(body?.key, 200))
   if (!key) return json({ error: 'Bildnyckel saknas' }, 400)
 

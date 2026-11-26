@@ -9,6 +9,7 @@ import { findOpenScan } from '../lib/scan'
 export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [name, setName] = useState(editSeed?.name || '')
   const [species, setSpecies] = useState(editSeed?.species || '')
+  const [cultivar, setCultivar] = useState(editSeed?.cultivar || '')
   const [notes, setNotes] = useState(editSeed?.notes || '')
   const [companion, setCompanion] = useState(editSeed?.companion_planting || '')
   const [frostSensitive, setFrostSensitive] = useState(editSeed?.frost_sensitive || false)
@@ -67,12 +68,16 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
     if (!name.trim()) { setError('Namn krävs'); return }
     setSaving(true)
     const payload = {
-      name: name.trim(), species: species.trim() || null,
+      name: name.trim(), species: species.trim() || null, cultivar: cultivar.trim() || null,
       notes: notes.trim() || null, companion_planting: companion.trim() || null,
       frost_sensitive: frostSensitive, requires_pretreatment: pretreatment,
       pretreatment_notes: pretreatmentNote || null,
       maintenance_level: highMaintenance ? 'high' : 'low',
       thumb, sown_date: sownDate || null, sowing_type: sowingType,
+    }
+    // Ändrad art eller sort: släpp kopplingen till den delade sorten, så kopplar fröets sida om.
+    if (editSeed && ((editSeed.species || null) !== payload.species || (editSeed.cultivar || null) !== payload.cultivar)) {
+      payload.variety_key = null
     }
     const { error: err } = editSeed
       ? await supabase.from('seeds').update(payload).eq('id', editSeed.id)
@@ -152,6 +157,9 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
 
         <SectionLabel>Latinskt namn</SectionLabel>
         <input value={species} onChange={e => setSpecies(e.target.value)} placeholder="t.ex. Lathyrus odoratus" style={{ ...inputStyle, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', marginBottom: '16px' }} />
+
+        <SectionLabel>Sort</SectionLabel>
+        <input value={cultivar} onChange={e => setCultivar(e.target.value)} placeholder="t.ex. Cupani (lämna tomt om du inte vet)" style={{ ...inputStyle, marginBottom: '16px' }} />
 
         <div style={{ height: '0.5px', background: border, margin: '4px 0 20px' }} />
         <SectionLabel>Egenskaper</SectionLabel>

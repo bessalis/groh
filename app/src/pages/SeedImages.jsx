@@ -46,6 +46,9 @@ export default function SeedImages({ onBack }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+  const [adding, setAdding] = useState(false)
+  const [newPlant, setNewPlant] = useState('')
+  const [newCultivar, setNewCultivar] = useState('')
 
   async function load() {
     const [facts, varieties, names, imgs] = await Promise.all([
@@ -65,6 +68,25 @@ export default function SeedImages({ onBack }) {
   const words = fold(query).split(/\s+/).filter(Boolean)
   const matches = !words.length || chosen ? [] : options.filter(o => words.every(w => o.search.includes(w))).slice(0, 8)
   const titleOf = k => options.find(o => o.key === k)?.title || k
+
+  // Arten eller sorten finns inte i den delade datan än: slå upp och lägg till
+  // (samma som när ett frö kopplas, högst ett AI-anrop om arten är ny).
+  async function addPlant() {
+    if (!newPlant.trim()) return
+    setError(''); setBusy('Slår upp växten …')
+    try {
+      const res = await callAi('/api/link-variety', { name: newPlant.trim(), species: '', cultivar: newCultivar.trim() })
+      const newKey = res.variety?.key || res.facts?.key
+      if (!newKey) throw new Error('Växten kunde inte sparas. Försök igen.')
+      await load()
+      setKey(newKey)
+      setQuery(res.variety ? `${newPlant.trim()} ’${newCultivar.trim()}’` : newPlant.trim())
+      setAdding(false); setNewPlant(''); setNewCultivar('')
+    } catch (err) {
+      setError(err?.message || 'Det gick inte att slå upp växten.')
+    }
+    setBusy('')
+  }
 
   async function upload(e) {
     e.preventDefault()
@@ -113,8 +135,28 @@ export default function SeedImages({ onBack }) {
           )}
           <p id="image-key-hint" className="field-hint">
             {chosen ? <>Vald: {chosen.title} <span className="t-latin">({chosen.sub})</span>.{hasImage.has(chosen.key) ? ' Har redan en bild, den nya ersätter den.' : ''}</>
-              : query && !matches.length ? 'Hittar ingen art eller sort. Arten behöver finnas i någons fröarkiv först.' : 'Välj en sort, eller arten om bilden ska gälla alla sorter.'}
+              : query && !matches.length ? 'Hittar ingen art eller sort med det namnet.' : 'Välj en sort, eller arten om bilden ska gälla alla sorter.'}
           </p>
+          {!chosen && !adding && (
+            <Button variant="link" onClick={() => { setAdding(true); setNewPlant(query) }} style={{ justifySelf: 'start' }}>Finns inte? Lägg till art eller sort</Button>
+          )}
+          {!chosen && adding && (
+            <div className="card card--muted card--compact" style={{ display: 'grid', gap: '10px' }}>
+              <div className="field">
+                <label className="field-label" htmlFor="new-plant">Växt (svenskt eller latinskt namn)</label>
+                <input id="new-plant" className="field-input" value={newPlant} onChange={e => setNewPlant(e.target.value)} placeholder="t.ex. potatis" />
+              </div>
+              <div className="field">
+                <label className="field-label" htmlFor="new-cultivar">Sort (valfritt)</label>
+                <input id="new-cultivar" className="field-input" value={newCultivar} onChange={e => setNewCultivar(e.target.value)} placeholder="t.ex. Cheri" />
+                <p className="field-hint">Arten slås upp med AI om ingen har den sparad. Utan sort gäller bilden hela arten.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Button onClick={addPlant} disabled={!newPlant.trim() || Boolean(busy)}>{busy || 'Slå upp och lägg till'}</Button>
+                <Button variant="ghost" onClick={() => setAdding(false)}>Avbryt</Button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="field">
           <label className="field-label" htmlFor="image-file">Bild (PNG, JPEG eller WebP)</label>

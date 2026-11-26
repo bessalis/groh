@@ -12,10 +12,14 @@
 
 const DAY = 86400000
 
-// Ungefärligt sista frostdatum per odlingszon (I–VIII), månad-dag. Grov
-// tumregel för en vanlig vår; användaren kan ändra sitt eget.
+// Ungefärligt sista frostdatum per odlingszon (I–VIII), månad-dag: dagen då det
+// är frost efter det vartannat år (50 %). Avstämt mot 20 års väderstatistik på
+// hortuli.com för Malmö (27 mars), Stockholm (27 april), Uppsala (9 maj) och
+// Kiruna (1 juni); zonerna däremellan är uppskattade. Kusten är mildare än
+// inlandet i samma zon. Användaren kan ange sitt eget datum. Frostkänsliga
+// planteras ut en vecka efter (ungefär där risken är 1 år av 10).
 export const LAST_FROST_BY_ZONE = {
-  1: '05-01', 2: '05-10', 3: '05-15', 4: '05-25', 5: '06-01', 6: '06-05', 7: '06-10', 8: '06-20',
+  1: '04-05', 2: '04-20', 3: '04-27', 4: '05-09', 5: '05-15', 6: '05-22', 7: '05-28', 8: '06-01',
 }
 
 export const STEP_LABELS = {

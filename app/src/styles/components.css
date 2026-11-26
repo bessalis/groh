@@ -216,3 +216,28 @@ button.card, a.card {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
+/* ── Fakta i rader (fröets sida) ──────────────────────────────────────────── */
+.fact-list { display: grid; gap: 10px; margin: 0; }
+.fact-list > div { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.fact-list dt { color: var(--text-muted); font-family: var(--font-body); font-size: var(--text-caption); margin: 0; }
+.fact-list dd { color: var(--text); font-family: var(--font-body); margin: 0; overflow-wrap: anywhere; }
+.fact-list .ai-chip { margin-left: 6px; vertical-align: middle; }
+
+/* ── Påsfoton ─────────────────────────────────────────────────────────────── */
+.packet-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.packet-photo {
+  display: grid; gap: 4px; padding: 0; border: 0; background: none; cursor: zoom-in;
+  color: var(--text-muted); font-family: var(--font-body); font-size: var(--text-caption); text-align: left;
+}
+.packet-photo img, .packet-photo__empty {
+  width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block;
+  border-radius: var(--radius-sm); background: var(--surface-muted); border: 0.5px solid var(--border-color);
+}
+.packet-photo:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+.photo-viewer {
+  position: fixed; inset: 0; z-index: 100; background: var(--bg);
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+}
+.photo-viewer img { width: 100%; height: 100%; object-fit: contain; }

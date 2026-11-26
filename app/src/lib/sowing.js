@@ -28,7 +28,7 @@ export async function saveFrostOverride(monthDay) {
   if (error) throw error
 }
 
-async function varietiesFor(seeds) {
+export async function varietiesFor(seeds) {
   const keys = [...new Set(seeds.map(s => s.variety_key).filter(Boolean))]
   if (!keys.length) return new Map()
   const { data } = await supabase.from('plant_varieties').select(VARIETY_COLUMNS).in('key', keys)

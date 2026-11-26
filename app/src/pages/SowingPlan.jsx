@@ -7,6 +7,8 @@ import { Button, SectionLabel } from '../components/ui'
 import { ROMAN } from '../lib/zone'
 import { lastFrost, isoDate, TEMPLATES } from '../lib/timeline'
 import { currentSeason, frostSettings, loadSeason, timelineFor, nextStep, markDone, suggestionFor, addToSeason } from '../lib/sowing'
+import { containerLabel, loadActiveSowings, waitingText, dayOf, inContainer, hasGerminated } from '../lib/containers'
+import MarkDot from '../components/MarkDot'
 
 const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
 const dayText = iso => new Date(`${iso}T12:00:00Z`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })
@@ -22,32 +24,34 @@ function whenText(iso, todayIso) {
   return dayText(iso)
 }
 
-export default function SowingPlan({ onOpenSeed }) {
+export default function SowingPlan({ onOpenSeed, onSowingDay }) {
   const season = currentSeason()
   const todayIso = isoDate(new Date())
   const [frost, setFrost] = useState(null)
   const [plants, setPlants] = useState(null)
+  const [sowings, setSowings] = useState([])
   const [candidates, setCandidates] = useState([])
   const [picked, setPicked] = useState(new Set())
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
   const load = async () => {
-    const [f, season_, seeds] = await Promise.all([
+    const [f, season_, seeds, active] = await Promise.all([
       frostSettings(),
       loadSeason(season),
       supabase.from('seeds').select('*').eq('is_archived', false).order('name'),
+      loadActiveSowings().catch(() => []),
     ])
     const planned = new Set(season_.map(p => p.seed_id))
-    return { f, season_, free: (seeds.data || []).filter(s => !planned.has(s.id)) }
+    return { f, season_, active, free: (seeds.data || []).filter(s => !planned.has(s.id)) }
   }
   async function reload() {
     const r = await load()
-    setFrost(r.f); setPlants(r.season_); setCandidates(r.free)
+    setFrost(r.f); setPlants(r.season_); setSowings(r.active); setCandidates(r.free)
   }
   useEffect(() => {
     let live = true
-    load().then(r => { if (live) { setFrost(r.f); setPlants(r.season_); setCandidates(r.free) } })
+    load().then(r => { if (live) { setFrost(r.f); setPlants(r.season_); setSowings(r.active); setCandidates(r.free) } })
       .catch(() => { if (live) { setPlants([]); setError('Årets sådd gick inte att hämta.') } })
     return () => { live = false }
   }, [])   // eslint-disable-line react-hooks/exhaustive-deps
@@ -79,7 +83,8 @@ export default function SowingPlan({ onOpenSeed }) {
     const timeline = timelineFor(p, p.seed, p.variety, frost)
     return { plant: p, next: nextStep(timeline), timeline }
   })
-  const active = rows.filter(r => r.next).sort((a, b) => a.next.date.localeCompare(b.next.date))
+  // Groningen följs per kärl (I kärlen), så den visas inte en gång till här.
+  const active = rows.filter(r => r.next && !(r.plant.sowing_id && r.next.step === 'germinate')).sort((a, b) => a.next.date.localeCompare(b.next.date))
   const soonLimit = isoDate(new Date(Date.now() + SOON_DAYS * 86400000))
   const now = active.filter(r => r.next.date <= soonLimit)
   const later = active.filter(r => r.next.date > soonLimit)
@@ -110,7 +115,49 @@ export default function SowingPlan({ onOpenSeed }) {
         </p>
       </div>
 
+      <Button variant="primary" full large onClick={onSowingDay}>Sådag – så i ett kärl</Button>
+
       {error && <p role="alert" className="t-small" style={{ color: 'var(--danger-text)', margin: 0 }}>{error}</p>}
+
+      {sowings.length > 0 && (
+        <section style={{ display: 'grid', gap: '10px' }}>
+          <SectionLabel style={{ margin: 0 }}>I kärlen</SectionLabel>
+          {sowings.map(s => {
+            const day = dayOf(s.sown_date, todayIso)
+            return (
+              <article key={s.id} className="card" style={{ display: 'grid', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MarkDot color={s.container.color} large />
+                  <div>
+                    <h3 className="t-heading-s" style={{ margin: 0 }}>{containerLabel(s.container)}</h3>
+                    <span className="t-caption" style={{ color: 'var(--text-muted)' }}>
+                      {day > 0 ? `Dag ${day}` : day === 0 ? 'Sått i dag' : 'Planerad'} · sått {dayText(s.sown_date)}
+                    </span>
+                  </div>
+                </div>
+                <p className="t-small" style={{ margin: 0, padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-soft)' }}>{waitingText(s, todayIso)}</p>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '8px' }}>
+                  {s.plants.filter(inContainer).map(p => {
+                    const grown = hasGerminated(p)
+                    const place = p.slots?.length ? `Plats ${p.slots.length > 1 ? `${p.slots[0]}–${p.slots.at(-1)}` : p.slots[0]}` : null
+                    return (
+                      <li key={p.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '8px', alignItems: 'center' }}>
+                        <button type="button" onClick={() => onOpenSeed?.(p.seed)} style={{ all: 'unset', cursor: 'pointer', minWidth: 0 }}>
+                          <span className="t-body" style={{ display: 'block' }}>{p.seed.name}</span>
+                          <span className="t-caption" style={{ color: 'var(--text-muted)' }}>{[place, grown ? 'grott' : 'väntar'].filter(Boolean).join(' · ')}</span>
+                        </button>
+                        {!grown && day >= 0 && (
+                          <Button onClick={() => done(p, 'germinate')} disabled={Boolean(busy)}>{busy === p.id ? 'Sparar …' : 'Grott'}</Button>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </article>
+            )
+          })}
+        </section>
+      )}
 
       {plants.length === 0 && (
         <p className="t-body" style={{ margin: 0 }}>Inget i årets sådd än. Välj fröer nedan, så får de en tidslinje.</p>

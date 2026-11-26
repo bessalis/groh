@@ -2,9 +2,15 @@
 // användarens rättningar i seed_scans och seed_scan_items. Se CLAUDE.md.
 import { supabase } from './supabase'
 import { callAi } from './api'
+import { ensurePhotoConsent } from './aiConsent'
 import { mergePatch, SEED_FIELDS } from './duplicates'
 
 const BUCKET = 'seed-packets'
+
+// Inga foton till AI utan samtycke (frågan visas om svaret saknas).
+async function requireConsent() {
+  if (!(await ensurePhotoConsent())) throw new Error('Fotona skickas inte till AI utan ditt samtycke. Du kan ge det under Profil → AI i Groh!.')
+}
 
 export async function startScan() {
   const { data, error } = await supabase.from('seed_scans').insert({ status: 'capturing' }).select('id').single()
@@ -23,7 +29,8 @@ export async function uploadPhoto(scanId, position, side, photo) {
 }
 
 /** Låter AI:n läsa påsen. Returnerar { reading, model }. */
-export function readPacket(front, back) {
+export async function readPacket(front, back) {
+  await requireConsent()
   return callAi('/api/scan-packet', {
     front: { type: front.type, data: front.base64 },
     back: back ? { type: back.type, data: back.base64 } : undefined,
@@ -149,6 +156,7 @@ export async function downloadPhoto(path) {
 }
 
 /** Hittar påsarna i ett gruppfoto. Returnerar { packets: [{ x0, y0, x1, y1, label }] }. */
-export function detectPackets(photo) {
+export async function detectPackets(photo) {
+  await requireConsent()
   return callAi('/api/detect-packets', { image: { type: photo.type, data: photo.base64 } })
 }

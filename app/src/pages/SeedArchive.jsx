@@ -1,48 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { Button } from '../components/ui'
-
-const images = import.meta.glob('../assets/*.png', { eager: true })
-
-const IMG_MAP = {
-  'Amaranthus': 'amarant',
-  'Callistephus chinensis': 'aster',
-  'Limonium sinuatum': 'luktart',
-  'Brassica oleracea': 'brysselkal',
-  'Celosia argentea': 'celosia',
-  'Phlox drummondii': 'flox',
-  'Briza maxima': 'jungfruhirs',
-  'Lavandula angustifolia': 'lavendel',
-  'Antirrhinum majus': 'lejongap',
-  'Lathyrus odoratus': 'luktart',
-  'Scabiosa atropurpurea': 'praktvadd',
-  'Delphinium': 'riddarsporre',
-  'Cosmos bipinnatus': 'rosenskara',
-  'Cynara scolymus': 'kronartskocka',
-  'Papaver orientale': 'vallmo',
-}
-
-function getPhase(sownDate) {
-  if (!sownDate) return 'growing'
-  const days = Math.floor((Date.now() - new Date(sownDate).getTime()) / 86400000)
-  if (days <= 7) return 'seed'
-  if (days <= 21) return 'seedling'
-  if (days <= 60) return 'growing'
-  return 'mature'
-}
-
-function SeedImage({ name, species, sownDate, currentPhase }) {
-  const file = IMG_MAP[species] || 'fallback'
-  const phase = currentPhase || getPhase(sownDate)
-  const fallback = images['../assets/fallback_growing.png']?.default
-  const src = images['../assets/' + file + '_' + phase + '.png']?.default || fallback
-  return (
-    <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: 'var(--surface-raised)' }}>
-      <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        onError={e => { if (e.target.src !== fallback) e.target.src = fallback }} />
-    </div>
-  )
-}
+import { Button, AiNote } from '../components/ui'
+import SeedImage from '../components/SeedImage'
+import { loadImageIndex, imageFor } from '../lib/seedImages'
 
 export default function SeedArchive({ onSelect, onAdd }) {
   const [seeds, setSeeds] = useState([])
@@ -57,6 +17,8 @@ export default function SeedArchive({ onSelect, onAdd }) {
   const inputBg = 'var(--surface)'
 
   const [compost, setCompost] = useState(false)
+  const [imageIndex, setImageIndex] = useState(null)
+  useEffect(() => { loadImageIndex().then(setImageIndex) }, [])
 
   async function fetchSeeds(showCompost = compost) {
     setLoading(true)
@@ -150,7 +112,7 @@ export default function SeedArchive({ onSelect, onAdd }) {
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
           onClick={() => { if (cardOffset < 10) onSelect && onSelect(seed) }}
           className="card" style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transform: 'translateX(-' + cardOffset + 'px)', transition: offset === 0 && !isOpen ? 'transform 0.3s ease' : 'none', position: 'relative', zIndex: 1 }}>
-        <SeedImage name={seed.name} species={seed.species} sownDate={seed.sown_date} currentPhase={seed.current_phase} />
+        <SeedImage image={imageIndex && imageFor(seed, imageIndex)} name={seed.name} style={{ width: '60px', height: '60px', borderRadius: '10px', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 2px', fontSize: 'var(--display-s)', color: text, lineHeight: 1.1, fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em' }}>{seed.name}</p>
             <p style={{ margin: '0 0 4px', fontSize: '14px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic' }}>{seed.species}</p>
@@ -197,6 +159,9 @@ export default function SeedArchive({ onSelect, onAdd }) {
           <p className="t-small" style={{ color: muted, margin: '0 0 12px' }}>Här hamnar det som inte blev något, och det du arkiverat. Inget försvinner: det blir näring till nästa år.</p>
         )}
         {!compost && filtered.map(seed => <SwipeCard key={seed.id} seed={seed} />)}
+        {!compost && imageIndex && filtered.some(seed => imageFor(seed, imageIndex)) && (
+          <AiNote>Illustrationerna är gjorda med AI, i Ernst Haeckels manér.</AiNote>
+        )}
         {compost && filtered.map(seed => (
           <div key={seed.id} className="card" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -60,7 +60,7 @@ Se `supabase/migrations/20261030120000_plant_data_model.sql`.
 Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i ett ChatGPT-projekt. Generera aldrig nya illustrationer själv.
 
 - Idag ligger de i `app/src/assets/` som `{art}_{fas}.png` (faser: seed, seedling, growing, mature) med `fallback_growing.png` som reserv.
-- Ny modell (migrering `20261126150000_seed_images.sql`): tabellen `seed_images` (bildnyckel = sortens nyckel, eller artens nyckel som reserv) och den publika bucketen `seed-images` med WebP i två storlekar. Bara serverfunktionerna skriver; uppladdning kräver `app_metadata.role = 'admin'` och räknas som godkännande. Bilderna är AI-genererade och märks i appen (`made_with`).
+- Ny modell (migrering `20261126150000_seed_images.sql`): tabellen `seed_images` (bildnyckel = sortens nyckel, eller artens nyckel som reserv) och den publika bucketen `seed-images` med WebP i två storlekar och svårgissade filnamn. Originalen ligger i den privata bucketen `seed-image-originals`. Bara serverfunktionerna skriver; uppladdning kräver `app_metadata.role = 'admin'` och räknas som godkännande. Bilderna är AI-genererade och märks i appen (`made_with`).
 - Framåt: en enda planschbild per sort (frö, planta och blomma i samma bild), lagrad i Supabase Storage och kopplad via en bildnyckel (latinskt namn + sort, artens bild som reserv). Se avsnittet om fröbilder i backloggen.
 
 ## Design

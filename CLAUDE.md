@@ -43,6 +43,7 @@ npm run lint
 3. **Minsta modell som räcker** för uppgiften. Begränsa `max_tokens`.
 4. **Lätt app.** Bilder i WebP och rätt storlek, komprimera foton vid uppladdning, fungera på äldre telefoner.
 5. **Lugnt tempo.** Inga notiser per frö, utan samlade påminnelser. Ingen oändlig scroll.
+6. **Så lite data som möjligt.** Spara bara det appen behöver. Hellre odlingszon än plats: zonen ger rimliga datum utan att vara en personuppgift. Gäller tills användarna efterfrågar något annat; ändras det ska integritetspolicyn uppdateras samtidigt.
 
 ## Databas
 

@@ -19,6 +19,8 @@ function buildOptions(facts, varieties, names) {
   const byKey = {}
   for (const f of facts) byKey[f.key] = { latin: f.species, names: f.swedish_name ? [f.swedish_name] : [] }
   for (const n of names) byKey[n.key]?.names.push(n.name)
+  // Kortaste namnet först: "potatis" hellre än "potatis cheri" som någon skrivit med sorten i.
+  for (const k in byKey) byKey[k].names.sort((x, y) => x.length - y.length)
   const title = key => cap(byKey[key]?.names[0]) || byKey[key]?.latin || key
   const options = facts.map(f => ({
     key: f.key, title: title(f.key), sub: `${f.species} · art`,

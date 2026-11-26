@@ -63,6 +63,14 @@ export default function Login({ onLogin }) {
         <Button variant="primary" large full onClick={handleSubmit} disabled={loading}>
           {loading ? 'Vänta…' : mode === 'login' ? 'Logga in' : 'Skapa konto'}
         </Button>
+        {mode === 'signup' && (
+          <p className="t-caption" style={{ color: muted, textAlign: 'center', margin: '12px 0 0' }}>
+            Så hanterar vi dina uppgifter: <a href="/integritet/" style={{ color: 'inherit' }}>integritetspolicyn</a>.
+          </p>
+        )}
+        <p className="t-caption" style={{ textAlign: 'center', margin: '16px 0 0' }}>
+          <a href="/integritet/" style={{ color: muted }}>Integritetspolicy</a> · <a href="/support/" style={{ color: muted }}>Support</a>
+        </p>
       </div>
     </div>
   )

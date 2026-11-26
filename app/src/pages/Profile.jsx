@@ -95,7 +95,10 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
         <button type="button" onClick={handleLogout} className="card t-body" style={{ textAlign: 'center', marginTop: '4px', color: 'var(--danger-text)' }}>
           Logga ut
         </button>
-        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '8px' }}>Groh! · Version 1.0.0</p>
+        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '16px' }}>
+          <a href="/integritet/" style={{ color: 'inherit' }}>Integritetspolicy</a> · <a href="/support/" style={{ color: 'inherit' }}>Support</a>
+        </p>
+        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '4px' }}>Groh! · Version 1.0.0</p>
       </div>
     </div>
   )

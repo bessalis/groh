@@ -1,0 +1,17 @@
+/* Publika sidor (integritetspolicy, support). Fristående från appen, så att
+   butikerna och vem som helst kan läsa dem utan att logga in. Färger som i
+   app/src/styles/tokens.css. */
+:root { color-scheme: light dark; --bg: #F2F0E8; --text: #1E2018; --muted: #4E6E44; --line: #D8E4D2; --link: #3B5E35; }
+@media (prefers-color-scheme: dark) { :root { --bg: #12130F; --text: #F2F0E8; --muted: #B8CEB0; --line: #2E4228; --link: #B8CEB0; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; font-size: 1.3rem; margin: 32px 0 8px; }
+p, li { max-width: 65ch; }
+.lead { font-size: 1.1rem; }
+.meta, small { color: var(--muted); }
+a { color: var(--link); }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 8px 8px 0; border-bottom: 1px solid var(--line); }
+.todo { background: #f9eeda; color: #1E2018; padding: 0 4px; border-radius: 3px; }

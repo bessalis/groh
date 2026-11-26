@@ -59,7 +59,7 @@ Se `supabase/migrations/20261030120000_plant_data_model.sql`.
 
 Fröillustrationerna är i Haeckels manér och genereras för hand av Linnéa i ett ChatGPT-projekt. Generera aldrig nya illustrationer själv.
 
-- Idag ligger de i `app/src/assets/` som `{art}_{fas}.png` (faser: seed, seedling, growing, mature) med `fallback_growing.png` som reserv.
+- Visning (`lib/seedImages.js`, `components/SeedImage.jsx`): listan över bilder hämtas en gång per besök. Ett frö får sortens bild (`variety_key`), annars artens (artnyckeln, latinskt namn eller svenskt namn via `plant_names`), annars en platshållare. En bild per sort, ingen bild per fas. AI-märkt på fröets sida och under fröarkivet. De gamla PNG-bilderna i `app/src/assets/` är borttagna (finns i git-historiken och som original i Supabase); startsidan och inloggningen har var sin WebP.
 - Ny modell (migrering `20261126150000_seed_images.sql`): tabellen `seed_images` (bildnyckel = sortens nyckel, eller artens nyckel som reserv) och den publika bucketen `seed-images` med WebP i två storlekar och svårgissade filnamn. Originalen ligger i den privata bucketen `seed-image-originals`. Bara serverfunktionerna skriver; uppladdning kräver `app_metadata.role = 'admin'` och räknas som godkännande. Bilderna är AI-genererade och märks i appen (`made_with`).
 - Uppladdning (`app/netlify/functions/seed-image.js`, sidan `pages/SeedImages.jsx` under Profil för admin): appen får en engångslänk och laddar upp originalet direkt till `seed-image-originals`, sedan gör `/api/seed-image` om det med sharp (`netlify/lib/normalize.js`: behåller genomskinlig bakgrund, beskär tom kant, centrerar i 3:4 med 8 % luft, WebP 480 och 1200 px men aldrig större än originalet). `action: 'reprocess'` gör om en bild från sitt sparade original (knappen "Gör om alla från originalen") och sparar raden. Admin sätts i Supabase: `raw_app_meta_data` med `{"role":"admin"}` på användaren.
 - Kön och flera bilder på en gång (`pages/SeedImages.jsx`): `/api/seed-image` med `action: 'queue'` räknar alla användares fröer (utom komposten) med service role och svarar med sorter och arter utan egen bild, flest användare först (`netlify/lib/imageQueue.js`). Appen gissar sort från filnamnet (`potatis-cheri.png`) och laddar upp en bild i taget.
@@ -113,4 +113,4 @@ Skriv aldrig typsnittsnamn eller egna storlekar direkt i koden, använd tokens e
 
 ## Kända brister
 
-- Bilder uppdateras inte i listan efter fasbyte förrän sidan laddas om.
+- Inga kända just nu.

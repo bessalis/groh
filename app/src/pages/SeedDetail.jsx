@@ -6,9 +6,11 @@ import IconMature from '../assets/mature.svg?react'
 import IconWater from '../assets/water.svg?react'
 import IconSun from '../assets/sun.svg?react'
 import IconTemp from '../assets/temperature.svg?react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, SectionLabel } from '../components/ui'
 import { supabase } from '../lib/supabase'
+import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
+import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
 
 const images = import.meta.glob('../assets/*.png', { eager: true })
 
@@ -73,6 +75,22 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
   const [userNotes, setUserNotes] = useState(seed.notes || '')
   const [savedNotes, setSavedNotes] = useState(false)
   const [isFavorite, setIsFavorite] = useState(seed.is_favorite || false)
+  const [plant, setPlant] = useState({ variety: null, facts: null, loading: true })
+
+  // Delad växtdata: läs det som finns, och koppla fröet om något saknas (högst ett anrop).
+  useEffect(() => {
+    let live = true
+    ;(async () => {
+      const saved = await loadPlantData(seed).catch(() => ({ variety: null, facts: null }))
+      if (!live) return
+      if (!needsLink(seed, saved)) { setPlant({ ...saved, loading: false }); return }
+      setPlant({ ...saved, loading: true })
+      const linked = await linkSeed(seed)
+      if (!live) return
+      setPlant({ variety: linked?.variety || saved.variety, facts: linked?.facts || saved.facts, loading: false })
+    })()
+    return () => { live = false }
+  }, [seed])
 
   async function handleToggleFavorite() {
     const next = !isFavorite
@@ -92,7 +110,9 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
   const borderColor = 'var(--border-color)'
   const iconBg = 'var(--accent-soft)'
 
-  const care = CARE_DATA[seed.species] || { water: '-', light: '-', temp: '-' }
+  const care = CARE_DATA[seed.species]
+  const frostSensitive = seed.frost_sensitive || plant.facts?.frost_sensitive
+  const needsPretreatment = seed.requires_pretreatment || plant.facts?.requires_pretreatment
 
   async function handlePhaseChange(phaseId) {
     if (phaseId === currentPhase) return
@@ -189,7 +209,7 @@ function getImage() {
           </p>
         </div>
 
-        <div className="card" style={{ marginBottom: '12px' }}>
+        {care && <div className="card" style={{ marginBottom: '12px' }}>
           <SectionLabel style={{ margin: '0 0 12px' }}>Skötselinstruktioner</SectionLabel>
           <div style={{ display: 'flex', gap: '8px' }}>
             {[
@@ -206,25 +226,29 @@ function getImage() {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
 
         <div className="card" style={{ marginBottom: '12px' }}>
           <SectionLabel style={{ margin: '0 0 8px' }}>Nästa steg</SectionLabel>
           <p style={{ fontSize: '14px', color: text, margin: 0, lineHeight: 1.5 }}>{NEXT_STEP[currentPhase]}</p>
-          {seed.frost_sensitive && (
+          {frostSensitive && (
             <p style={{ fontSize: '13px', color: 'var(--warn-text)', margin: '8px 0 0', lineHeight: 1.5 }}>⚠ Frostkänslig – vänta tills nattfrosten är över innan utplantering.</p>
           )}
         </div>
 
-        {(seed.frost_sensitive || seed.requires_pretreatment) && (
+        {(frostSensitive || needsPretreatment) && (
           <div className="card" style={{ marginBottom: '12px' }}>
             <SectionLabel>Att tänka på</SectionLabel>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {seed.frost_sensitive && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--warn-bg)', color: 'var(--warn-text)', border: '0.5px solid var(--warn-border)' }}>Frostkänslig</span>}
-              {seed.requires_pretreatment && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--info-bg)', color: 'var(--info-text)', border: '0.5px solid var(--info-border)' }}>Förbehandling krävs</span>}
+              {frostSensitive && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--warn-bg)', color: 'var(--warn-text)', border: '0.5px solid var(--warn-border)' }}>Frostkänslig</span>}
+              {needsPretreatment && <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'var(--info-bg)', color: 'var(--info-text)', border: '0.5px solid var(--info-border)' }}>Förbehandling krävs</span>}
             </div>
           </div>
         )}
+
+        <SowingCard seed={seed} variety={plant.variety} />
+        <SpeciesCard facts={plant.facts} loading={plant.loading} />
+        <PacketCard seed={seed} />
 
         <div className="card" style={{ marginBottom: '12px' }}>
           <SectionLabel style={{ margin: '0 0 8px' }}>Anteckningar</SectionLabel>

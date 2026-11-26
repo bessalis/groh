@@ -118,3 +118,24 @@ export async function useAiQuota(userId) {
     return true
   }
 }
+
+// ── Sorter (plant_varieties) ──────────────────────────────────────────────
+// Nyckeln är '<artnyckel>|<sortnamn normaliserat>' och är också bildnyckel.
+export const VARIETY_COLUMNS = 'key,species_key,cultivar,swedish_name,sow_indoor_months,sow_outdoor_months,days_to_germination_min,days_to_germination_max,sowing_depth_cm,light_germination,status'
+
+export function varietyKey(speciesKey, cultivar) {
+  const sort = normalizeName(String(cultivar || '').replace(/["'”“‘’]/g, ''))
+  return speciesKey && sort ? `${speciesKey}|${sort}` : null
+}
+
+export async function findVariety(key) {
+  const rows = await rest(`plant_varieties?key=eq.${encodeURIComponent(key)}&select=${VARIETY_COLUMNS}`)
+  return rows?.[0] || null
+}
+
+// Skapar sorten om den inte finns. En befintlig (kanske granskad) sort lämnas orörd.
+export async function saveVariety(row) {
+  await rest('plant_varieties?on_conflict=key', {
+    method: 'POST', body: row, prefer: 'resolution=ignore-duplicates,return=minimal',
+  })
+}

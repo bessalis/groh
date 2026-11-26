@@ -7,13 +7,13 @@ import IconWater from '../assets/water.svg?react'
 import IconSun from '../assets/sun.svg?react'
 import IconTemp from '../assets/temperature.svg?react'
 import { useEffect, useState } from 'react'
-import { Button, SectionLabel } from '../components/ui'
+import { Button, SectionLabel, AiNote } from '../components/ui'
+import SeedImage from '../components/SeedImage'
+import { loadImageIndex, imageFor } from '../lib/seedImages'
 import { supabase } from '../lib/supabase'
 import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
 import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
 import SeasonCard from '../components/SeasonCard'
-
-const images = import.meta.glob('../assets/*.png', { eager: true })
 
 const NEXT_STEP = {
   seed: 'Håll jorden fuktig och varm. Grodden brukar visa sig inom 1-3 veckor.',
@@ -44,22 +44,6 @@ const CARE_DATA = {
   'Papaver': { water: 'Var 7-10 dag', light: 'Sol/halvskugga', temp: '10-18°C' },
 }
 
-const IMG_MAP = {
-  // Befintliga
-  luktart: 'luktart', luktärt: 'luktart',
-  rosenskara: 'rosenskara', rosenskära: 'rosenskara',
-  aster: 'aster', riddarsporre: 'riddarsporre',
-  lejongap: 'lejongap', jungfruhirs: 'jungfruhirs',
-  brysselkal: 'brysselkal', brysselkål: 'brysselkal',
-  lavendel: 'lavendel', vallmo: 'vallmo', sibirisk: 'vallmo',
-  // Nya
-  flox: 'flox',
-  amarant: 'amarant',
-  celosia: 'celosia',
-  kronartskocka: 'kronartskocka',
-  praktvadd: 'praktvadd',
-}
-
 function autoPhase(sownDate) {
   if (!sownDate) return null
   const days = Math.floor((Date.now() - new Date(sownDate).getTime()) / 86400000)
@@ -77,6 +61,14 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
   const [savedNotes, setSavedNotes] = useState(false)
   const [isFavorite, setIsFavorite] = useState(seed.is_favorite || false)
   const [plant, setPlant] = useState({ variety: null, facts: null, loading: true })
+  const [image, setImage] = useState(undefined)   // undefined = hämtas, null = ingen bild
+
+  // Fröbilden: sortens plansch, annars artens. Ny koppling (variety_key) kan ge en sortbild.
+  useEffect(() => {
+    let live = true
+    loadImageIndex().then(idx => { if (live) setImage(imageFor({ ...seed, variety_key: plant.variety?.key || seed.variety_key }, idx)) })
+    return () => { live = false }
+  }, [seed, plant.variety])
 
   // Delad växtdata: läs det som finns, och koppla fröet om något saknas (högst ett anrop).
   useEffect(() => {
@@ -123,20 +115,6 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
     setSavingPhase(false)
   }
 
-function getImage() {
-  const nameLower = seed.name.toLowerCase()
-  const key = Object.keys(IMG_MAP).find(k => nameLower.includes(k))
-  const file = key ? IMG_MAP[key] : 'fallback'
-  const fallback = images['../assets/fallback_growing.png']?.default
-
-  const phasesToTry = [currentPhase, 'growing', 'seedling', 'seed']
-  for (const phase of phasesToTry) {
-    const src = images['../assets/' + file + '_' + phase + '.png']?.default
-    if (src) return src
-  }
-  return fallback
-}
-
   async function handleDelete() {
     await supabase.from('seeds').delete().eq('id', seed.id)
     onBack && onBack()
@@ -151,10 +129,9 @@ function getImage() {
     <div style={{ background: bg, minHeight: '100vh', maxWidth: '390px', margin: '0 auto', paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' }}>
 
       <div style={{ position: 'relative' }}>
-        <div style={{ height: '260px', background: 'var(--surface-muted)', overflow: 'hidden' }}>
-          <img src={getImage()} alt={seed.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={e => { e.target.src = images['../assets/fallback_growing.png']?.default }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 50%, ' + bg + ')' }} />
+        <div style={{ height: '320px', background: 'var(--surface-muted)', overflow: 'hidden' }}>
+          {image !== undefined && <SeedImage image={image} name={seed.name} size="large" style={{ width: '100%', height: '100%' }} />}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 70%, ' + bg + ')', pointerEvents: 'none' }} />
         </div>
         <Button variant="on-image" onClick={onBack} style={{ position: 'absolute', top: '16px', left: '16px' }}>
           ← Tillbaka
@@ -169,6 +146,11 @@ function getImage() {
       <div style={{ padding: '0 16px', marginTop: '-20px', position: 'relative' }}>
         <h1 style={{ fontSize: 'var(--display-m)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>{seed.name}</h1>
         <p style={{ fontSize: '15px', color: muted, fontFamily: 'var(--font-latin)', fontVariationSettings: 'var(--fraunces-soft)', fontStyle: 'italic', margin: '0 0 20px' }}>{seed.species}</p>
+        {image && (
+          <div style={{ margin: '-12px 0 20px' }}>
+            <AiNote>{image.kind === 'variety' ? 'Illustrationen är gjord med AI.' : 'Illustrationen visar arten och är gjord med AI.'}</AiNote>
+          </div>
+        )}
 
         {seed.sown_date && (
           <div style={{ background: 'var(--accent-soft)', border: '0.5px solid ' + 'var(--accent-border)', borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>

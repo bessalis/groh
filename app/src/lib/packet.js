@@ -27,3 +27,10 @@ export function sowingFor(seed, variety) {
   }
   return { values, from }
 }
+
+/** Fröets namn plus sort, om sorten inte redan står i namnet ("Luktärt Basic"). */
+export function seedTitle(seed) {
+  const c = seed?.cultivar?.trim()
+  const name = seed?.name || ''
+  return c && !name.toLowerCase().includes(c.toLowerCase()) ? `${name} ${c}` : name
+}

@@ -5,14 +5,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Button, SectionLabel } from '../components/ui'
 import MarkDot from '../components/MarkDot'
+import SeedPicker from '../components/SeedPicker'
+import { seedTitle } from '../lib/packet'
 import { isoDate } from '../lib/timeline'
 import { currentSeason, frostSettings, suggestionFor } from '../lib/sowing'
 import {
   COLORS, KINDS, DEFAULT_TRAY_SLOTS, containerLabel, slotCount, listContainers, createContainer,
   loadActiveSowings, occupiedSlots, saveSowing,
 } from '../lib/containers'
-
-const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
 
 function NewContainer({ onCreated, onCancel }) {
   const [kind, setKind] = useState('tray')
@@ -102,19 +102,10 @@ export default function SowingDay({ onDone, onBack }) {
     return () => { live = false }
   }, [])
 
-  // Fröerna i såordning: grupperade på månaden då de föreslås sås.
-  const byMonth = useMemo(() => {
-    if (!frost) return []
-    const rows = seeds.map(seed => ({ seed, start: suggestionFor(seed, null, frost, { season }).start }))
-      .sort((a, b) => a.start.localeCompare(b.start) || a.seed.name.localeCompare(b.seed.name, 'sv'))
-    const groups = []
-    for (const r of rows) {
-      const m = Number(r.start.slice(5, 7)) - 1
-      if (groups.at(-1)?.month !== m) groups.push({ month: m, seeds: [] })
-      groups.at(-1).seeds.push(r.seed)
-    }
-    return groups
-  }, [seeds, frost, season])
+  // Fröerna med föreslaget sådatum, för sortering på såtid.
+  const pickRows = useMemo(() => (frost
+    ? seeds.map(seed => ({ seed, start: suggestionFor(seed, null, frost, { season }).start }))
+    : []), [seeds, frost, season])
 
   if (!containers) {
     return <p role="status" className="t-body" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Hämtar dina kärl …</p>
@@ -227,8 +218,8 @@ export default function SowingDay({ onDone, onBack }) {
               const seed = assigned[n]
               return (
                 <button key={n} type="button" className={`slot${seed ? ' slot--filled' : ''}`} aria-pressed={selected === n}
-                  aria-label={`Plats ${n}: ${seed ? seed.name : 'tom'}`} onClick={() => setSelected(n)}>
-                  <span className="slot__no">{n}</span>{seed ? seed.name : '+ frö'}
+                  aria-label={`Plats ${n}: ${seed ? seedTitle(seed) : 'tom'}`} onClick={() => setSelected(n)}>
+                  <span className="slot__no">{n}</span>{seed ? seedTitle(seed) : '+ frö'}
                 </button>
               )
             })}
@@ -237,29 +228,20 @@ export default function SowingDay({ onDone, onBack }) {
       )}
 
       {container.kind === 'bed' && bedSeeds.length > 0 && (
-        <p className="t-small" style={{ margin: 0 }}>Valda: {bedSeeds.map(s => s.name).join(', ')}</p>
+        <p className="t-small" style={{ margin: 0 }}>Valda: {bedSeeds.map(seedTitle).join(', ')}</p>
       )}
 
       {(container.kind === 'bed' || selected != null) && (
         <section className="card" style={{ display: 'grid', gap: '10px' }}>
-          <SectionLabel style={{ margin: 0 }}>{container.kind === 'bed' ? 'Vad sår du?' : `Vad ska stå på plats ${selected}?`}</SectionLabel>
+          <SectionLabel style={{ margin: 0 }}>{container.kind === 'bed' ? 'Vad sår du?' : `Vad ska gro på plats ${selected}?`}</SectionLabel>
           {container.kind !== 'bed' && (assigned[selected] || lastSeed) && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {lastSeed && !assigned[selected] && <Button onClick={() => pick(lastSeed)}>Samma igen: {lastSeed.name}</Button>}
+              {lastSeed && !assigned[selected] && <Button onClick={() => pick(lastSeed)}>Samma igen: {seedTitle(lastSeed)}</Button>}
               {assigned[selected] && <Button variant="ghost" onClick={() => clearSlot(selected)}>Töm platsen</Button>}
             </div>
           )}
-          {byMonth.map(g => (
-            <div key={g.month} style={{ display: 'grid', gap: '6px' }}>
-              <span className="t-caption" style={{ color: 'var(--text-muted)' }}>{MONTHS[g.month]}</span>
-              <div className="chips">
-                {g.seeds.map(seed => (
-                  <button key={seed.id} type="button" className="chip" aria-pressed={container.kind === 'bed' ? chosenIds.has(seed.id) : assigned[selected]?.id === seed.id}
-                    onClick={() => pick(seed)}>{seed.name}</button>
-                ))}
-              </div>
-            </div>
-          ))}
+          <SeedPicker rows={pickRows} multi={container.kind === 'bed'} onPick={pick}
+            isSelected={seed => (container.kind === 'bed' ? chosenIds.has(seed.id) : assigned[selected]?.id === seed.id)} />
           {!seeds.length && <p className="t-small" style={{ margin: 0 }}>Du har inga fröer än. Lägg till fröer under Fröer först.</p>}
         </section>
       )}

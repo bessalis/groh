@@ -308,3 +308,29 @@ button.card, a.card {
 .slot--taken { border-style: solid; background: var(--surface-muted); color: var(--text-muted); cursor: default; }
 .slot[aria-pressed="true"] { outline: 2px solid var(--text-accent); outline-offset: 1px; }
 .slot:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }
+
+/* Fröväljaren på sådagen: kort eller lista */
+.seed-pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.seed-pick-list { display: grid; gap: 6px; }
+.seed-pick {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  text-align: left;
+  cursor: pointer;
+  min-height: 44px;
+}
+.seed-pick--cards { flex-direction: column; }
+.seed-pick--list { flex-direction: row; align-items: center; gap: 12px; }
+.seed-pick__image { border-radius: var(--radius-sm); flex: none; }
+.seed-pick--cards .seed-pick__image { width: 100%; aspect-ratio: 3 / 4; }
+.seed-pick--list .seed-pick__image { width: 44px; height: 58px; }
+.seed-pick__name { line-height: 1.3; }
+.seed-pick[aria-pressed="true"] { background: var(--accent-selected); border-color: var(--accent); font-weight: 700; }
+.seed-pick:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }

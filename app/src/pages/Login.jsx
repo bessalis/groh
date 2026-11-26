@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import plantImg from '../assets/brysselkal_seedling.png'
+import plantImg from '../assets/login-brysselkal.webp'
 import grohLogo from '../assets/groh.svg'
 import { supabase } from '../lib/supabase'
 import { Button } from '../components/ui'

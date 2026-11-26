@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
+import DeleteAccount from '../components/DeleteAccount'
 
-export default function Profile({ onLogout, onOpenSeedImages }) {
+export default function Profile({ onLogout, onOpenSeedImages, onOpenAi }) {
   const [user, setUser] = useState(null)
   const [seedCount, setSeedCount] = useState(0)
   const [savingZone, setSavingZone] = useState(false)
@@ -86,6 +87,12 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
             <span style={{ color: muted, fontSize: '18px' }}>›</span>
           </div>
         ))}
+        {onOpenAi && (
+          <button type="button" onClick={onOpenAi} className="card t-body" style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+            <span style={{ flex: 1, color: text }}>AI i Groh!</span>
+            <span aria-hidden="true" style={{ color: muted, fontSize: '18px' }}>›</span>
+          </button>
+        )}
         {user?.app_metadata?.role === 'admin' && onOpenSeedImages && (
           <button type="button" onClick={onOpenSeedImages} className="card t-body" style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
             <span style={{ flex: 1, color: text }}>Fröbilder (admin)</span>
@@ -95,6 +102,8 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
         <button type="button" onClick={handleLogout} className="card t-body" style={{ textAlign: 'center', marginTop: '4px', color: 'var(--danger-text)' }}>
           Logga ut
         </button>
+        <div style={{ marginTop: '24px' }}><DeleteAccount /></div>
+        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '8px' }}>Groh! · Version 1.0.0</p>
         <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '16px' }}>
           <a href="/integritet/" style={{ color: 'inherit' }}>Integritetspolicy</a> · <a href="/support/" style={{ color: 'inherit' }}>Support</a>
         </p>

@@ -13,6 +13,7 @@ import { loadImageIndex, imageFor } from '../lib/seedImages'
 import { supabase } from '../lib/supabase'
 import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
 import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
+import SeasonCard from '../components/SeasonCard'
 
 const NEXT_STEP = {
   seed: 'Håll jorden fuktig och varm. Grodden brukar visa sig inom 1-3 veckor.',
@@ -228,6 +229,7 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
           </div>
         )}
 
+        {!plant.loading && <SeasonCard seed={seed} variety={plant.variety} />}
         <SowingCard seed={seed} variety={plant.variety} />
         <SpeciesCard facts={plant.facts} loading={plant.loading} />
         <PacketCard seed={seed} />

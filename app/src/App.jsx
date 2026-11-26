@@ -8,7 +8,11 @@ import Home from './pages/Home'
 import SeedArchive from './pages/SeedArchive'
 import Calendar from './pages/Calendar'
 import Review from './pages/Review'
+import SowingPlan from './pages/SowingPlan'
 import { supabase } from './lib/supabase'
+import { ensurePhotoConsent } from './lib/aiConsent'
+import AiConsentDialog from './components/AiConsentDialog'
+import AiInfo from './pages/AiInfo'
 import './styles/tokens.css'
 
 // Skanningen laddas först när den öppnas, så att startsidan förblir lätt.
@@ -79,7 +83,8 @@ export default function App() {
         <Icon name={dark ? 'sun' : 'moon'} size={18} color="var(--text)" />
       </button>
 
-      {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} />}
+      {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} onOpenPlan={() => goTo('plan')} />}
+      {page === 'plan' && <SowingPlan onOpenSeed={seed => { goTo('seeds'); setSelectedSeed(seed) }} />}
       {page === 'review' && <Review onDone={() => goTo('home')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />
@@ -90,13 +95,15 @@ export default function App() {
       )}
       </Suspense>
       {page === 'seeds' && addingSeed && !scanning && (
-        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={resumeId => setScanning({ resumeId })} editSeed={editingSeed} />
+        <AddSeed onBack={() => { setAddingSeed(false); setEditingSeed(null) }} onSaved={() => { setAddingSeed(false); setEditingSeed(null) }} onScan={resumeId => ensurePhotoConsent().then(ok => { if (ok) setScanning({ resumeId }) })} editSeed={editingSeed} />
       )}
       {page === 'seeds' && selectedSeed && !addingSeed && (
         <SeedDetail seed={selectedSeed} onBack={() => setSelectedSeed(null)} onEdit={seed => { setEditingSeed(seed); setAddingSeed(true) }} />
       )}
       {page === 'calendar' && <Calendar />}
-      {page === 'profile' && <Profile onLogout={() => supabase.auth.signOut()} onOpenSeedImages={() => goTo('seed-images')} />}
+      {page === 'profile' && <Profile onLogout={() => supabase.auth.signOut()} onOpenSeedImages={() => goTo('seed-images')} onOpenAi={() => goTo('ai')} />}
+      {page === 'ai' && <AiInfo onBack={() => goTo('profile')} />}
+      <AiConsentDialog onReadMore={() => goTo('ai')} />
       {page === 'seed-images' && <Suspense fallback={null}><SeedImages onBack={() => goTo('profile')} /></Suspense>}
 
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg)', borderTop: 'var(--border)', display: 'flex', justifyContent: 'space-around', padding: '10px max(0px, calc((100% - 390px) / 2)) calc(14px + env(safe-area-inset-bottom))', zIndex: 100 }}>

@@ -11,7 +11,7 @@ import grohLogo from '../assets/groh.svg'
 
 const shortcuts = [
   { icon: '+', label: 'Lägg till', action: 'add' },
-  { icon: '?', label: 'Planera', action: null },
+  { icon: '?', label: 'Planera', action: 'plan' },
   { icon: '...', label: 'Övrigt', action: null },
 ]
 
@@ -22,7 +22,7 @@ const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', '
 const PRIORITY = { seedling: 0, growing: 1, seed: 2, mature: 3 }
 const byUrgency = (a, b) => (PRIORITY[a.current_phase] ?? 4) - (PRIORITY[b.current_phase] ?? 4)
 
-export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
+export default function Home({ onAdd, onOpenCalendar, onOpenReview, onOpenPlan }) {
   const [seedCount, setSeedCount] = useState(0)
   const [todo, setTodo] = useState(null)        // [{ seed, tip }] eller null medan det laddar
   const [season, setSeason] = useState(null)    // { month, text, tip }
@@ -99,7 +99,7 @@ export default function Home({ onAdd, onOpenCalendar, onOpenReview }) {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '200px', background: 'linear-gradient(to bottom, transparent 0%, ' + gradientStop + ' 100%)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
           {shortcuts.map((s, i) => (
-            <button key={i} type="button" className="action-tile" onClick={() => s.action === 'add' && onAdd && onAdd()}>
+            <button key={i} type="button" className="action-tile" onClick={() => { if (s.action === 'add') onAdd?.(); if (s.action === 'plan') onOpenPlan?.() }}>
               <span className="action-tile__icon" aria-hidden="true">{s.icon}</span>
               <span>{s.label}</span>
             </button>

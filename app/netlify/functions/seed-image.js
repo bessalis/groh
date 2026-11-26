@@ -9,6 +9,7 @@ import { computeQueue } from '../lib/imageQueue.js'
 //
 //   { action: 'queue' }             → sorter och arter som saknar bild, flest användare först
 //   { action: 'upload-url', key }   → engångslänk för originalet i seed-image-originals
+//   { action: 'reprocess', key }    → gör om en befintlig bild från sitt sparade original
 //   { action: 'publish', key, originalPath }
 //        → normaliserar originalet, lägger två WebP med slumpnamn i den publika
 //          bucketen seed-images och sparar raden i seed_images.
@@ -29,6 +30,22 @@ async function speciesFor(key) {
   }
   const facts = await findFactsByKey(key)
   return facts?.key || null
+}
+
+// Gör om originalet och lägger ut två WebP med slumpnamn. Svarar det appen visar.
+async function publishFrom(key, speciesKey, originalPath) {
+  const normalized = await normalizeSeedImage(await downloadObject(ORIGINALS, originalPath))
+  // Svårgissade namn: slumpkod per uppladdning.
+  const code = randomBytes(12).toString('base64url')
+  const small_path = `${code}-${SIZES.small}.webp`
+  const large_path = `${code}-${SIZES.large}.webp`
+  await uploadObject(PUBLIC, small_path, normalized.small, 'image/webp')
+  await uploadObject(PUBLIC, large_path, normalized.large, 'image/webp')
+  await saveSeedImage({ key, species_key: speciesKey, small_path, large_path, original_path: originalPath, made_with: 'chatgpt' })
+  return {
+    key, small: publicUrl(PUBLIC, small_path), large: publicUrl(PUBLIC, large_path),
+    trimmed: normalized.trimmed, bytes: { small: normalized.small.length, large: normalized.large.length },
+  }
 }
 
 export default async (req) => {
@@ -66,30 +83,27 @@ export default async (req) => {
     return Response.json(await signedUploadUrl(ORIGINALS, path))
   }
 
+  if (body?.action === 'reprocess') {
+    const rows = await rest(`seed_images?key=eq.${encodeURIComponent(key)}&select=original_path`)
+    const originalPath = rows?.[0]?.original_path
+    if (!originalPath) return json({ error: 'Originalet saknas för den här bilden' }, 404)
+    try {
+      return Response.json(await publishFrom(key, speciesKey, originalPath))
+    } catch (e) {
+      console.error('Kunde inte göra om bilden', e)
+      return json({ error: 'Bilden gick inte att göra om.' }, 422)
+    }
+  }
+
   if (body?.action === 'publish') {
     const originalPath = cleanText(body?.originalPath, 300)
     if (!originalPath || originalPath.includes('..')) return json({ error: 'Originalet saknas' }, 400)
-
-    let normalized
     try {
-      normalized = await normalizeSeedImage(await downloadObject(ORIGINALS, originalPath))
+      return Response.json(await publishFrom(key, speciesKey, originalPath))
     } catch (e) {
       console.error('Kunde inte göra om bilden', e)
       return json({ error: 'Bilden gick inte att läsa. Prova PNG, JPEG eller WebP.' }, 422)
     }
-
-    // Svårgissade namn: slumpkod per uppladdning.
-    const code = randomBytes(12).toString('base64url')
-    const small_path = `${code}-${SIZES.small}.webp`
-    const large_path = `${code}-${SIZES.large}.webp`
-    await uploadObject(PUBLIC, small_path, normalized.small, 'image/webp')
-    await uploadObject(PUBLIC, large_path, normalized.large, 'image/webp')
-    await saveSeedImage({ key, species_key: speciesKey, small_path, large_path, original_path: originalPath, made_with: 'chatgpt' })
-
-    return Response.json({
-      key, small: publicUrl(PUBLIC, small_path), large: publicUrl(PUBLIC, large_path),
-      trimmed: normalized.trimmed, bytes: { small: normalized.small.length, large: normalized.large.length },
-    })
   }
 
   return json({ error: 'Okänd åtgärd' }, 400)

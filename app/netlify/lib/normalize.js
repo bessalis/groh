@@ -1,9 +1,11 @@
 // Gör om en fröbild (Linnéas plansch från ChatGPT) till två visningsstorlekar.
 // Ingen AI, bara bildbehandling med sharp:
-//   1. vänder bilden rätt (EXIF) och tar bort genomskinlighet mot bakgrundsfärgen
+//   1. vänder bilden rätt (EXIF); genomskinlig bakgrund behålls, annars används
+//      färgen i hörnen som bakgrund
 //   2. beskär bort tom bakgrund runt motivet
 //   3. centrerar motivet i ett stående 3:4-format med lika mycket luft runt om
-//   4. sparar WebP i två bredder, 480 px (listor) och 1200 px (fröets sida)
+//   4. sparar WebP i två bredder, 480 px (listor) och 1200 px (fröets sida),
+//      men aldrig större än originalet
 
 import sharp from 'sharp'
 
@@ -13,8 +15,8 @@ const AIR = 0.08              // luft runt motivet, andel av motivets längsta s
 const TRIM_THRESHOLD = 24     // hur mycket bakgrunden får variera (papperstextur)
 const MAX_BYTES = 1024 * 1024 // bucketens gräns
 
-// Bakgrundsfärgen: medelvärdet av fyra små rutor i hörnen. Är hörnen
-// genomskinliga blir bakgrunden vit.
+// Bakgrunden: medelvärdet av fyra små rutor i hörnen. Är hörnen genomskinliga
+// behålls genomskinligheten, så att bilden passar både ljust och mörkt läge.
 async function backgroundOf(buffer, width, height) {
   const box = Math.max(1, Math.round(Math.min(width, height) * 0.02))
   const corners = [[0, 0], [width - box, 0], [0, height - box], [width - box, height - box]]
@@ -25,12 +27,12 @@ async function backgroundOf(buffer, width, height) {
     for (let i = 0; i < 4; i++) sums[i] += channels[i].mean
   }
   const [r, g, b, alpha] = sums.map(s => Math.round(s / corners.length))
-  return alpha < 128 ? { r: 255, g: 255, b: 255 } : { r, g, b }
+  return alpha < 128 ? { r: 0, g: 0, b: 0, alpha: 0 } : { r, g, b }
 }
 
 async function toWebp(image, width, height) {
-  for (let quality = 82; quality >= 50; quality -= 8) {
-    const buffer = await image.clone().resize(width, height).webp({ quality, effort: 4 }).toBuffer()
+  for (let quality = 76; quality >= 50; quality -= 8) {
+    const buffer = await image.clone().resize(width, height).webp({ quality, alphaQuality: 75, effort: 6 }).toBuffer()
     if (buffer.length <= MAX_BYTES || quality <= 50) return buffer
   }
 }
@@ -44,12 +46,16 @@ export async function normalizeSeedImage(input) {
   const { data: oriented, info } = await source.toBuffer({ resolveWithObject: true })
   const background = await backgroundOf(oriented, info.width, info.height)
 
-  // Platt bild mot bakgrundsfärgen, sedan bort med tom kant.
-  const flattened = await sharp(oriented).flatten({ background }).toBuffer()
+  // Genomskinlig bakgrund: behåll alfakanalen och beskär efter den.
+  // Annars: platt bild mot bakgrundsfärgen, sedan bort med tom kant.
+  const transparent = background.alpha === 0
+  const flattened = transparent
+    ? await sharp(oriented).ensureAlpha().toBuffer()
+    : await sharp(oriented).flatten({ background }).toBuffer()
   let trimmed = true
   let content
   try {
-    content = await sharp(flattened).trim({ background, threshold: TRIM_THRESHOLD }).toBuffer({ resolveWithObject: true })
+    content = await sharp(flattened).trim(transparent ? { threshold: TRIM_THRESHOLD } : { background, threshold: TRIM_THRESHOLD }).toBuffer({ resolveWithObject: true })
   } catch {
     trimmed = false   // hela bilden är bakgrund eller trim misslyckades: använd som den är
   }
@@ -72,10 +78,12 @@ export async function normalizeSeedImage(input) {
     .extend({ left, right: frameW - w - left, top, bottom: frameH - h - top, background })
     .toBuffer())
 
+  // Förstora aldrig: är originalet mindre än storleken blir bilden så stor som originalet.
   const heightFor = width => Math.round(width / ASPECT)
+  const widthFor = size => Math.min(size, frameW)
   const [small, large] = await Promise.all([
-    toWebp(framed, SIZES.small, heightFor(SIZES.small)),
-    toWebp(framed, SIZES.large, heightFor(SIZES.large)),
+    toWebp(framed, widthFor(SIZES.small), heightFor(widthFor(SIZES.small))),
+    toWebp(framed, widthFor(SIZES.large), heightFor(widthFor(SIZES.large))),
   ])
-  return { small, large, background, trimmed }
+  return { small, large, background, trimmed, transparent }
 }

@@ -36,7 +36,7 @@ export function normalizeName(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
-const FACT_COLUMNS = 'key,species,frost_sensitive,requires_pretreatment,pretreatment_note,maintenance_level,companion_planting,sowing_note,status'
+const FACT_COLUMNS = 'key,species,swedish_name,frost_sensitive,requires_pretreatment,pretreatment_note,maintenance_level,companion_planting,sowing_note,status'
 
 export async function findFactsByName(name) {
   const rows = await rest(`plant_names?name=eq.${encodeURIComponent(name)}&select=plant_facts(${FACT_COLUMNS})`)

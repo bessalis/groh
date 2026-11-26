@@ -6,7 +6,7 @@ import { combinedStatus } from '../lib/aiStatus'
 import { fetchCategories, plantKey } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
 import { isReviewTime, loadPending, SEASON } from '../lib/review'
-import illustration from '../assets/luktart_growing.png'
+import illustration from '../assets/home-luktart.webp'
 import grohLogo from '../assets/groh.svg'
 
 const shortcuts = [

@@ -18,6 +18,7 @@ import './styles/tokens.css'
 // Skanningen laddas först när den öppnas, så att startsidan förblir lätt.
 const BatchScan = lazy(() => import('./pages/BatchScan'))
 const SeedImages = lazy(() => import('./pages/SeedImages'))
+const SowingDay = lazy(() => import('./pages/SowingDay'))
 
 const NAV_ITEMS = [
   { id: 'home',     label: 'Hem',     icon: 'home'      },
@@ -84,7 +85,8 @@ export default function App() {
       </button>
 
       {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} onOpenPlan={() => goTo('plan')} />}
-      {page === 'plan' && <SowingPlan onOpenSeed={seed => { goTo('seeds'); setSelectedSeed(seed) }} />}
+      {page === 'plan' && <SowingPlan onOpenSeed={seed => { goTo('seeds'); setSelectedSeed(seed) }} onSowingDay={() => goTo('sowing-day')} />}
+      {page === 'sowing-day' && <Suspense fallback={null}><SowingDay onDone={() => goTo('plan')} onBack={() => goTo('plan')} /></Suspense>}
       {page === 'review' && <Review onDone={() => goTo('home')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />

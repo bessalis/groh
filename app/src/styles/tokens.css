@@ -69,6 +69,15 @@
   --on-feature:        #11171F;            /* 5,6:1 mot --feature-bg */
 
   --scrim:           rgba(0, 0, 0, 0.45);   /* bakom ljus text över bilder */
+
+  /* Färgduttar på odlingskärl (inte text, alltid med namn bredvid). */
+  --mark-yellow: #E8B830;
+  --mark-white:  #FFFFFF;
+  --mark-wine:   #7A2440;
+  --mark-blue:   #3A6EA5;
+  --mark-green:  #4E8A3E;
+  --mark-black:  #1E1E1E;
+  --mark-ring:   #75836B;            /* kant runt dutten, syns i båda lägena */
 }
 
 [data-theme="dark"] {

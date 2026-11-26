@@ -268,3 +268,43 @@ button.card, a.card {
 .timeline__step--done .timeline__dot { background: var(--accent); border-color: var(--accent); }
 .timeline__step--next .timeline__dot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .timeline__body { min-width: 0; }
+
+/* ── Odlingskärl och sådag ───────────────────────────────────────────────── */
+.mark-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--mark-ring);
+  vertical-align: -2px;
+}
+.mark-dot--lg { width: 22px; height: 22px; }
+.mark-dot[data-color="yellow"] { background: var(--mark-yellow); }
+.mark-dot[data-color="white"]  { background: var(--mark-white); }
+.mark-dot[data-color="wine"]   { background: var(--mark-wine); }
+.mark-dot[data-color="blue"]   { background: var(--mark-blue); }
+.mark-dot[data-color="green"]  { background: var(--mark-green); }
+.mark-dot[data-color="black"]  { background: var(--mark-black); }
+
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.slot {
+  min-height: 64px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--accent-border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.slot__no { color: var(--text-muted); font-weight: 700; }
+.slot--filled { border-style: solid; background: var(--accent-soft); }
+.slot--taken { border-style: solid; background: var(--surface-muted); color: var(--text-muted); cursor: default; }
+.slot[aria-pressed="true"] { outline: 2px solid var(--text-accent); outline-offset: 1px; }
+.slot:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }

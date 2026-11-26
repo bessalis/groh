@@ -186,3 +186,46 @@ export async function saveSeedImage(row) {
     method: 'POST', body: row, prefer: 'resolution=merge-duplicates,return=minimal',
   })
 }
+
+// ── Radera konto ──────────────────────────────────────────────────────────
+/** Alla filer under en mapp i en bucket, även i undermappar. */
+export async function listObjects(bucket, prefix) {
+  const { url, key } = storageUrl(`object/list/${bucket}`)
+  const files = []
+  for (let offset = 0; ; offset += 1000) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix, limit: 1000, offset }),
+    })
+    if (!res.ok) throw new Error(`Storage list ${res.status} ${await res.text()}`)
+    const items = await res.json()
+    for (const item of items) {
+      const path = `${prefix}${item.name}`
+      if (item.id) files.push(path)                       // en fil
+      else files.push(...await listObjects(bucket, `${path}/`))   // en mapp
+    }
+    if (items.length < 1000) return files
+  }
+}
+
+export async function removeObjects(bucket, paths) {
+  for (let i = 0; i < paths.length; i += 500) {
+    const { url, key } = storageUrl(`object/${bucket}`)
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: paths.slice(i, i + 500) }),
+    })
+    if (!res.ok) throw new Error(`Storage delete ${res.status} ${await res.text()}`)
+  }
+}
+
+export async function deleteAuthUser(id) {
+  const c = config()
+  if (!c) throw new Error('SUPABASE_SERVICE_ROLE_KEY saknas i Netlify')
+  const res = await fetch(`${c.url}/auth/v1/admin/users/${encodeURIComponent(id)}`, {
+    method: 'DELETE', headers: { apikey: c.key, Authorization: `Bearer ${c.key}` },
+  })
+  if (!res.ok) throw new Error(`Auth delete ${res.status} ${await res.text()}`)
+}

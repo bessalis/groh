@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
+import DeleteAccount from '../components/DeleteAccount'
 
 export default function Profile({ onLogout, onOpenSeedImages }) {
   const [user, setUser] = useState(null)
@@ -95,6 +96,7 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
         <button type="button" onClick={handleLogout} className="card t-body" style={{ textAlign: 'center', marginTop: '4px', color: 'var(--danger-text)' }}>
           Logga ut
         </button>
+        <div style={{ marginTop: '24px' }}><DeleteAccount /></div>
         <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '8px' }}>Groh! · Version 1.0.0</p>
       </div>
     </div>

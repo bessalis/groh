@@ -254,6 +254,7 @@ button.card, a.card {
 .seed-image { overflow: hidden; background: var(--surface-muted); display: grid; place-items: center; }
 .seed-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .seed-image--empty { color: var(--text-subtle); }
+
 /* ── Tidslinje (årets sådd) ──────────────────────────────────────────────── */
 .timeline { list-style: none; margin: 0; padding: 0; display: grid; }
 .timeline__step { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }

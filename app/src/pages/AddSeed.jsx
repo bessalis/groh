@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { findDuplicate } from '../lib/duplicates'
 import { callAi } from '../lib/api'
 import { CATEGORIES } from '../lib/categories'
 import { Button, SectionLabel, AiNote } from '../components/ui'
@@ -26,6 +27,7 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   const [factStatus, setFactStatus] = useState(null)
   const [category, setCategory] = useState(null)
   const [error, setError] = useState('')
+  const [duplicate, setDuplicate] = useState(null)   // ett befintligt frö med samma namn, när man lägger till nytt
 
   const [openScan, setOpenScan] = useState(null)
   useEffect(() => { if (!editSeed) findOpenScan().then(setOpenScan).catch(() => {}) }, [editSeed])
@@ -67,6 +69,14 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
   async function handleSave() {
     if (!name.trim()) { setError('Namn krävs'); return }
     setSaving(true)
+    // Nytt frö: varna om det redan finns ett med samma namn (eller art) och sort.
+    // Andra trycket med samma namn och sort sparar ändå.
+    const dupKey = `${name.trim().toLowerCase()}|${species.trim().toLowerCase()}|${cultivar.trim().toLowerCase()}`
+    if (!editSeed && duplicate?.key !== dupKey) {
+      const { data: mine } = await supabase.from('seeds').select('id, name, species, cultivar').eq('is_archived', false)
+      const existing = findDuplicate({ name: name.trim(), species: species.trim(), cultivar: cultivar.trim() }, mine || [])
+      if (existing) { setDuplicate({ ...existing, key: dupKey }); setSaving(false); return }
+    }
     const payload = {
       name: name.trim(), species: species.trim() || null, cultivar: cultivar.trim() || null,
       notes: notes.trim() || null, companion_planting: companion.trim() || null,
@@ -200,6 +210,11 @@ export default function AddSeed({ onBack, onSaved, onScan, editSeed }) {
         </div>
 
         {error && <p style={{ fontSize: '13px', color: 'var(--danger-text)', textAlign: 'center', marginBottom: '12px' }}>{error}</p>}
+        {duplicate && (
+          <p role="status" className="t-small" style={{ textAlign: 'center', margin: '0 0 12px' }}>
+            Du har redan {duplicate.name}{duplicate.cultivar ? ` ’${duplicate.cultivar}’` : ''} i fröarkivet. Tryck spara igen om du vill ha en till.
+          </p>
+        )}
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

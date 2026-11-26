@@ -13,7 +13,8 @@ const VARIETY_COLUMNS = 'key, sow_indoor_months, sow_outdoor_months, days_to_ger
 // Fröets fas följer tidslinjen, så att startsidan och kalendern stämmer.
 const PHASE_AFTER = { sow: 'seed', plant_bulb: 'seed', germinate: 'seedling', sprout: 'seedling', pot_up: 'seedling', harden_off: 'seedling', thin: 'growing', plant_out: 'growing' }
 
-export const currentSeason = () => new Date().getFullYear()
+// Från september planerar man nästa år (samma brytpunkt som höstbokslutet).
+export const currentSeason = (date = new Date()) => date.getFullYear() + (date.getMonth() >= 8 ? 1 : 0)
 
 /** Användarens frostinställning: zon och eventuellt eget datum ('MM-DD'). */
 export async function frostSettings() {
@@ -64,6 +65,9 @@ export function suggestionFor(seed, variety, frostCtx, { season = currentSeason(
 }
 
 export async function addToSeason(seed, { template, start }, season = currentSeason()) {
+  // Redan med i säsongen (t.ex. dubbeltryck eller två flikar): lägg inte till igen.
+  const existing = await plantForSeed(seed.id, season)
+  if (existing) return existing.id
   const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase.from('plants')
     .insert({ user_id: user.id, seed_id: seed.id, season, template, sown_date: null })

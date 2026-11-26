@@ -1,15 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Icon } from '../components/Icon'
 import { callAi } from '../lib/api'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
 import { SectionLabel, AiNote } from '../components/ui'
 import { combinedStatus } from '../lib/aiStatus'
-import CategoryIcon from '../components/CategoryIcon'
-import { fetchCategories, plantKey, PHASE_LABEL } from '../lib/categories'
 
-const PHASE_ICON = { seed: 'seed', seedling: 'seedling', growing: 'grown', mature: 'mature' }
 
 const MONTHS_SV = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
 
@@ -82,21 +78,19 @@ function SeasonalPattern({ month, accent }) {
   )
 }
 
+function Skeleton({ h = 14, w = '100%' }) {
+  return <div style={{ height: h, width: w, borderRadius: 6, background: 'var(--border-color)', opacity: 0.6, animation: 'pulse 1.4s ease-in-out infinite' }} />
+}
+
 export default function Calendar() {
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
-  const [seeds, setSeeds] = useState([])
-  const [seedsLoaded, setSeedsLoaded] = useState(false)
-  const [aiContent, setAiContent] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [selectedSeed, setSelectedSeed] = useState(null)
+  const [result, setResult] = useState({ key: null, data: null })
   const [slideDir, setSlideDir] = useState(0)
   const [animKey, setAnimKey] = useState(0)
-  const chipsRef = useRef(null)
   const [user, setUser] = useState(null)
   const [savingZone, setSavingZone] = useState(false)
-  const [categories, setCategories] = useState({})
   const { zone, chosen: zoneChosen } = readZone(user)
 
   const season = getSeason(currentMonth)
@@ -113,67 +107,30 @@ export default function Calendar() {
     setSavingZone(false)
   }
 
+  // Säsongstext och allmänna tips för månaden. Sparas per zon och månad på
+  // servern och delas mellan alla; den lokala kopian används bara om servern
+  // inte svarar, t.ex. offline. Fröerna skickas inte med: de följs i Årets sådd.
+  const contentKey = `${zone}-${currentYear}-${currentMonth}`
   useEffect(() => {
-    console.log('[Calendar] Laddar frön från Supabase...')
-    supabase.from('seeds')
-      .select('id, name, species, sown_date, current_phase, frost_sensitive')
-      .eq('is_archived', false)
-      .then(({ data }) => {
-        console.log('[Calendar] Frön laddade:', data?.length ?? 0, 'st')
-        setSeeds(data || [])
-        setSeedsLoaded(true)
-        if (data?.length) fetchCategories(data, setCategories).catch(() => { /* ikonerna faller tillbaka på fasen */ })
-      })
-  }, [])
-
-  useEffect(() => {
-    console.log('[Calendar] AI-useEffect triggrad – seedsLoaded:', seedsLoaded, '| månad:', currentMonth, currentYear)
-    if (!seedsLoaded) {
-      console.log('[Calendar] Väntar på att frön ska laddas...')
-      return
-    }
-    fetchAiContent()
-  }, [currentMonth, currentYear, seedsLoaded, zone])
-
-  async function fetchAiContent() {
-    // Tipsen sparas per zon och månad på servern och delas mellan alla.
-    // Den lokala kopian används bara om servern inte svarar, t.ex. offline.
+    let live = true
     const cacheKey = `groh_calendar_z${zone}_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
-    setLoading(true)
-    const body = {
-      month: currentMonth,
-      year: currentYear,
-      seeds: seeds.map(s => ({
-        name: s.name, species: s.species,
-        current_phase: s.current_phase,
-        frost_sensitive: s.frost_sensitive,
-      }))
-    }
-    try {
-      // Servern skriver högst sex nya artips per anrop. Har du många nya arter
-      // hämtar vi några gånger till, så att alla fröer får sitt tips.
-      let data = await callAi('/api/calendar-ai', body)
-      setAiContent(data)
-      for (let round = 0; data.pending > 0 && round < 8; round++) {
-        const next = await callAi('/api/calendar-ai', body)
-        if (next.seedTips.length <= data.seedTips.length) break
-        data = next
-        setAiContent(data)
-      }
-      try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* fullt eller blockerat */ }
-    } catch {
-      let cached = null
-      try { cached = JSON.parse(localStorage.getItem(cacheKey)) } catch { /* ingen lokal kopia */ }
-      setAiContent(cached)
-    }
-    setLoading(false)
-  }
+    callAi('/api/calendar-ai', { month: currentMonth, year: currentYear, seeds: [] })
+      .then(data => {
+        try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* fullt eller blockerat */ }
+        return data
+      })
+      .catch(() => {
+        try { return JSON.parse(localStorage.getItem(cacheKey)) } catch { return null }
+      })
+      .then(data => { if (live) setResult({ key: contentKey, data }) })
+    return () => { live = false }
+  }, [contentKey])   // eslint-disable-line react-hooks/exhaustive-deps
+  const loading = result.key !== contentKey
+  const aiContent = loading ? null : result.data
 
   function navigate(delta) {
     setSlideDir(delta)
     setAnimKey(k => k + 1)
-    setSelectedSeed(null)
-    setAiContent(null)
     if (delta === 1) {
       if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1) }
       else setCurrentMonth(m => m + 1)
@@ -181,13 +138,6 @@ export default function Calendar() {
       if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1) }
       else setCurrentMonth(m => m - 1)
     }
-    if (chipsRef.current) chipsRef.current.scrollLeft = 0
-  }
-
-  const selectedTip = aiContent?.seedTips?.find(t => t.seedName === selectedSeed)?.tip
-
-  function Skeleton({ h = 14, w = '100%' }) {
-    return <div style={{ height: h, width: w, borderRadius: 6, background: border, opacity: 0.6, animation: 'pulse 1.4s ease-in-out infinite' }} />
   }
 
   return (
@@ -248,75 +198,6 @@ export default function Calendar() {
           )}
         </div>
 
-        {/* Dina frön just nu */}
-        <div key={`seeds-${animKey}`} style={{ animation: 'fadeUp 0.4s ease 0.15s both' }}>
-          <SectionLabel style={{ margin: '0 0 12px 2px', color: accent }}>Dina frön just nu</SectionLabel>
-
-          {seeds.length === 0 ? (
-            <div className="card card--roomy">
-              <p style={{ fontSize: '14px', color: accent, fontStyle: 'italic', margin: 0 }}>Du har inga frön i arkivet ännu.</p>
-            </div>
-          ) : (
-            <>
-              {/* Horisontella frökorт ~100×100px */}
-              <div ref={chipsRef} className="scrollbar-hide" style={{ display: 'flex', gap: '8px', overflowX: 'auto', margin: '0 -16px', padding: '0 16px 4px' }}>
-                {seeds.map((seed, i) => {
-                  const active = selectedSeed === seed.name
-                  const icon = PHASE_ICON[seed.current_phase] || 'seed'
-                  const category = categories[plantKey(seed)]
-                  const tip = aiContent?.seedTips?.find(t => t.seedName === seed.name)?.tip || ''
-                  return (
-                    <button
-                      key={seed.id}
-                      onClick={() => setSelectedSeed(active ? null : seed.name)}
-                      style={{
-                        flexShrink: 0, width: '100px', height: '100px',
-                        borderRadius: '14px', padding: '10px 10px 8px',
-                        border: '0.5px solid ' + (active ? accent : border),
-                        background: active ? 'var(--accent-soft)' : cardBg,
-                        cursor: 'pointer', textAlign: 'left',
-                        display: 'flex', flexDirection: 'column', gap: '5px',
-                        transition: 'background 0.2s, border-color 0.2s',
-                        animation: `fadeUp 0.3s ease ${0.05 * i + 0.2}s both`,
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: active ? 'var(--accent-selected)' : 'var(--accent-icon-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {category
-                            ? <CategoryIcon category={category} size={17} color={accent} />
-                            : <Icon name={icon} size={16} color={accent} />}
-                        </div>
-                        {category && PHASE_LABEL[seed.current_phase] && (
-                          <span style={{ fontSize: '10px', color: accent, whiteSpace: 'nowrap' }}>{PHASE_LABEL[seed.current_phase]}</span>
-                        )}
-                      </div>
-                      <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text)', margin: 0, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-                        {seed.name}
-                      </p>
-                      {tip && (
-                        <p style={{ fontSize: '10px', color: accent, margin: 0, lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                          {tip}
-                        </p>
-                      )}
-                      {!tip && loading && (
-                        <div style={{ height: 10, width: '80%', borderRadius: 4, background: border, opacity: 0.5, animation: 'pulse 1.4s ease-in-out infinite' }} />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Valt frö – fullt tipskort */}
-              {selectedSeed && selectedTip && (
-                <div className="card" style={{ border: '0.5px solid color-mix(in srgb, ' + accent + ' 30%, transparent)', marginTop: '10px', animation: 'fadeUp 0.25s ease both' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{selectedTip}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
         {/* Det här är [månad] */}
         <div key={`tips-${animKey}`} className="card card--roomy" style={{ animation: 'fadeUp 0.4s ease 0.25s both', transition: 'background 0.5s, border-color 0.5s' }}>
           <SectionLabel style={{ margin: '0 0 14px', color: accent }}>Det här är {MONTHS_SV[currentMonth].toLowerCase()}</SectionLabel>
@@ -330,7 +211,7 @@ export default function Calendar() {
                 <p key={i} style={{ fontSize: '14px', color: 'var(--text)', margin: 0, lineHeight: 1.6 }}>{tip}</p>
               ))}
               <AiNote style={{ marginTop: '4px' }}>
-                {combinedStatus([aiContent.seasonStatus, ...(aiContent.seedTips || []).map(t => t.status)]) === 'reviewed'
+                {combinedStatus([aiContent.seasonStatus]) === 'reviewed'
                   ? 'Texterna på den här sidan är skrivna av AI och granskade.'
                   : 'Texterna på den här sidan är skrivna av AI och ännu inte granskade.'}
               </AiNote>

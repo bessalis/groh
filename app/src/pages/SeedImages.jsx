@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { callAi } from '../lib/api'
 import { Button, SectionLabel, AiNote } from '../components/ui'
+import { loadImageIndex } from '../lib/seedImages'
 
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 const QUEUE_SHOWN = 12
@@ -95,6 +96,7 @@ export default function SeedImages({ onBack }) {
     const opts = buildOptions(facts.data || [], varieties.data || [], names.data || [])
     setOptions(opts)
     setImages(imgs.data || [])
+    loadImageIndex({ refresh: true })   // så att fröarkivet visar nya bilder direkt
     try { setQueue(await callAi('/api/seed-image', { action: 'queue' })) } catch { setQueue({ items: [], unlinked: 0, failed: true }) }
     return opts
   }

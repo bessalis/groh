@@ -139,3 +139,50 @@ export async function saveVariety(row) {
     method: 'POST', body: row, prefer: 'resolution=ignore-duplicates,return=minimal',
   })
 }
+
+// ── Lagring (Supabase Storage) med service role ──────────────────────────
+function storageUrl(path) {
+  const c = config()
+  if (!c) throw new Error('SUPABASE_SERVICE_ROLE_KEY saknas i Netlify')
+  return { url: `${c.url}/storage/v1/${path}`, key: c.key, base: c.url }
+}
+
+const encodePath = path => path.split('/').map(encodeURIComponent).join('/')
+
+/** Engångslänk så att appen kan ladda upp en fil direkt till en privat bucket. */
+export async function signedUploadUrl(bucket, path) {
+  const { url, key, base } = storageUrl(`object/upload/sign/${bucket}/${encodePath(path)}`)
+  const res = await fetch(url, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}` } })
+  if (!res.ok) throw new Error(`Storage sign ${res.status} ${await res.text()}`)
+  const { url: signed } = await res.json()
+  const token = new URL(signed, base).searchParams.get('token')
+  return { path, token }
+}
+
+export async function downloadObject(bucket, path) {
+  const { url, key } = storageUrl(`object/${bucket}/${encodePath(path)}`)
+  const res = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } })
+  if (!res.ok) throw new Error(`Storage download ${res.status} ${await res.text()}`)
+  return Buffer.from(await res.arrayBuffer())
+}
+
+export async function uploadObject(bucket, path, body, contentType) {
+  const { url, key } = storageUrl(`object/${bucket}/${encodePath(path)}`)
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': contentType, 'Cache-Control': 'max-age=31536000' },
+    body,
+  })
+  if (!res.ok) throw new Error(`Storage upload ${res.status} ${await res.text()}`)
+}
+
+export function publicUrl(bucket, path) {
+  return storageUrl(`object/public/${bucket}/${encodePath(path)}`).url
+}
+
+// ── Fröbilder (seed_images) ───────────────────────────────────────────────
+export async function saveSeedImage(row) {
+  await rest('seed_images?on_conflict=key', {
+    method: 'POST', body: row, prefer: 'resolution=merge-duplicates,return=minimal',
+  })
+}

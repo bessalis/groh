@@ -8,6 +8,7 @@ import Home from './pages/Home'
 import SeedArchive from './pages/SeedArchive'
 import Calendar from './pages/Calendar'
 import Review from './pages/Review'
+import SowingPlan from './pages/SowingPlan'
 import { supabase } from './lib/supabase'
 import './styles/tokens.css'
 
@@ -79,7 +80,8 @@ export default function App() {
         <Icon name={dark ? 'sun' : 'moon'} size={18} color="var(--text)" />
       </button>
 
-      {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} />}
+      {page === 'home' && <Home onAdd={() => { setPage('seeds'); setAddingSeed(true) }} onOpenCalendar={() => goTo('calendar')} onOpenReview={() => goTo('review')} onOpenPlan={() => goTo('plan')} />}
+      {page === 'plan' && <SowingPlan onOpenSeed={seed => { goTo('seeds'); setSelectedSeed(seed) }} />}
       {page === 'review' && <Review onDone={() => goTo('home')} />}
       {page === 'seeds' && !selectedSeed && !addingSeed && (
         <SeedArchive onSelect={setSelectedSeed} onAdd={() => setAddingSeed(true)} />

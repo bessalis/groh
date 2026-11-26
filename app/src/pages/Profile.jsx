@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
+import FrostSetting from '../components/FrostSetting'
 
 export default function Profile({ onLogout, onOpenSeedImages }) {
   const [user, setUser] = useState(null)
@@ -75,6 +76,9 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
         <ZonePicker zone={zone} chosen={chosen} onChange={changeZone} saving={savingZone}
           colors={{ text, muted, border, cardBg, activeBg: iconBg }} />
         {zoneError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--danger-text)' }}>{zoneError}</p>}
+      </div>
+      <div className="card card--roomy" style={{ margin: '0 16px 12px' }}>
+        <FrostSetting key={zone} />
       </div>
       <div style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {menuItems.map((item, i) => (

@@ -11,6 +11,7 @@ import { Button, SectionLabel } from '../components/ui'
 import { supabase } from '../lib/supabase'
 import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
 import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
+import SeasonCard from '../components/SeasonCard'
 
 const images = import.meta.glob('../assets/*.png', { eager: true })
 
@@ -246,6 +247,7 @@ function getImage() {
           </div>
         )}
 
+        {!plant.loading && <SeasonCard seed={seed} variety={plant.variety} />}
         <SowingCard seed={seed} variety={plant.variety} />
         <SpeciesCard facts={plant.facts} loading={plant.loading} />
         <PacketCard seed={seed} />

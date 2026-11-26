@@ -23,7 +23,11 @@ function buildOptions(facts, varieties, names) {
   for (const f of facts) byKey[f.key] = { latin: f.species, names: f.swedish_name ? [f.swedish_name] : [] }
   for (const n of names) byKey[n.key]?.names.push(n.name)
   // Kortaste namnet först: "potatis" hellre än "potatis cheri" som någon skrivit med sorten i.
-  for (const k in byKey) byKey[k].names.sort((x, y) => x.length - y.length)
+  // Artens svenska namn (med å, ä, ö) går först om det finns.
+  for (const k in byKey) {
+    const own = facts.find(f => f.key === k)?.swedish_name
+    byKey[k].names = [...(own ? [own] : []), ...byKey[k].names.filter(n => n !== own).sort((x, y) => x.length - y.length)]
+  }
   const title = key => cap(byKey[key]?.names[0]) || byKey[key]?.latin || key
   const options = facts.map(f => ({
     key: f.key, kind: 'species', title: title(f.key), latin: f.species,
@@ -52,6 +56,14 @@ function guessKey(fileName, options, queueKeys) {
     }
   }
   return best?.key || ''
+}
+
+// Växtnamnet i ett filnamn: "luktart_growing 2.png" → "luktart".
+const PHASE_WORDS = new Set(['seed', 'seedling', 'growing', 'mature', 'plansch', 'bild', 'v1', 'v2', 'v3'])
+function plantNameFromFile(fileName) {
+  if (/chatgpt|dall.?e|image|img_|screenshot|skärmavbild/i.test(fileName)) return ''
+  return fileName.replace(/\.[a-z0-9]+$/i, '').split(/[^\p{L}\p{N}]+/u)
+    .filter(w => w && !PHASE_WORDS.has(w.toLowerCase()) && !/^\d+$/.test(w)).join(' ')
 }
 
 function publicUrl(path) {
@@ -130,7 +142,9 @@ export default function SeedImages({ onBack }) {
 
   const pending = rows.filter(r => r.status === 'ready' || r.status === 'failed')
   const missingKey = pending.some(r => !r.key)
-  const duplicateKey = new Set(pending.map(r => r.key)).size < pending.length
+  const chosenKeys = pending.map(r => r.key).filter(Boolean)
+  const duplicateKey = new Set(chosenKeys).size < chosenKeys.length
+  const unguessed = pending.filter(r => !r.key && plantNameFromFile(r.file.name))
 
   async function uploadAll() {
     setError(''); setBusy('Laddar upp …')
@@ -138,6 +152,28 @@ export default function SeedImages({ onBack }) {
     for (const row of pending) await uploadOne(row)
     setBusy('')
     await load()
+  }
+
+  // Slår upp arten från filnamnet för bilder utan val, en i taget (samma uppslag
+  // som när ett frö kopplas: sparat svar först, annars ett AI-anrop som delas).
+  async function lookupFromNames() {
+    setError('')
+    const found = {}
+    for (const row of unguessed) {
+      const name = plantNameFromFile(row.file.name)
+      setBusy(`Slår upp ${name} …`)
+      updateRow(row.id, { message: `Slår upp ${name} …` })
+      try {
+        const res = await callAi('/api/link-variety', { name, species: '', cultivar: '' })
+        if (res.facts?.key) found[row.id] = res.facts.key
+        updateRow(row.id, { message: res.facts?.key ? '' : `Hittade ingen växt som heter ${name}.` })
+      } catch (err) {
+        updateRow(row.id, { message: err?.message || `Kunde inte slå upp ${name}.` })
+      }
+    }
+    await load()
+    setRows(r => r.map(row => (found[row.id] ? { ...row, key: found[row.id] } : row)))
+    setBusy('')
   }
 
   function clearDone() {
@@ -241,6 +277,9 @@ export default function SeedImages({ onBack }) {
                   </optgroup>
                 </select>
               )}
+              {row.key && row.status !== 'done' && byKey.get(row.key) && (
+                <p className="t-caption t-latin" style={{ color: 'var(--text-muted)', margin: 0 }}>{byKey.get(row.key).latin}</p>
+              )}
               {row.key && row.status !== 'done' && hasImage.has(row.key) && (
                 <p className="t-caption" style={{ color: 'var(--text-muted)', margin: 0 }}>Har redan en bild, den nya ersätter den.</p>
               )}
@@ -257,7 +296,16 @@ export default function SeedImages({ onBack }) {
 
         {pending.length > 0 && (
           <>
-            {missingKey && <p className="t-caption" style={{ color: 'var(--text-muted)', margin: 0 }}>Välj art eller sort för alla bilder.</p>}
+            {unguessed.length > 0 && (
+              <div className="card card--soft card--compact" style={{ display: 'grid', gap: '8px' }}>
+                <p className="t-small" style={{ margin: 0 }}>
+                  {unguessed.length === 1 ? '1 bild' : `${unguessed.length} bilder`} har en växt som inte finns i Groh! än. Appen kan slå upp dem från filnamnen.
+                </p>
+                <Button onClick={lookupFromNames} disabled={Boolean(busy)} style={{ justifySelf: 'start' }}>{busy || 'Slå upp från filnamnen'}</Button>
+                <AiNote>Nya arter slås upp med AI en gång och sparas för alla. Kolla att rätt art blev vald innan du laddar upp.</AiNote>
+              </div>
+            )}
+            {missingKey && !unguessed.length && <p className="t-caption" style={{ color: 'var(--text-muted)', margin: 0 }}>Välj art eller sort för alla bilder.</p>}
             {duplicateKey && <p className="t-caption" style={{ color: 'var(--danger-text)', margin: 0 }}>Två bilder har samma sort. Välj om eller ta bort den ena.</p>}
             <Button variant="primary" full onClick={uploadAll} disabled={missingKey || duplicateKey || Boolean(busy)}>
               {busy || (pending.length === 1 ? 'Ladda upp och godkänn' : `Ladda upp och godkänn ${pending.length} bilder`)}

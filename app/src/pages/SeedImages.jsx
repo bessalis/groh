@@ -10,6 +10,29 @@ import { Button, SectionLabel, AiNote } from '../components/ui'
 
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 
+const cap = v => (v ? v.charAt(0).toUpperCase() + v.slice(1) : v)
+const fold = v => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+// Sökbara val: arter och sorter med svenska namn (det användare skrivit, plant_names),
+// sortnamn och latinskt namn. Svenska namnet först, det latinska som stöd.
+function buildOptions(facts, varieties, names) {
+  const byKey = {}
+  for (const f of facts) byKey[f.key] = { latin: f.species, names: f.swedish_name ? [f.swedish_name] : [] }
+  for (const n of names) byKey[n.key]?.names.push(n.name)
+  const title = key => cap(byKey[key]?.names[0]) || byKey[key]?.latin || key
+  const options = facts.map(f => ({
+    key: f.key, title: title(f.key), sub: `${f.species} · art`,
+    search: fold([...byKey[f.key].names, f.species].join(' ')),
+  }))
+  for (const v of varieties) {
+    options.push({
+      key: v.key, title: `${title(v.species_key)} ’${v.cultivar}’`, sub: `${byKey[v.species_key]?.latin || v.species_key} · sort`,
+      search: fold([...(byKey[v.species_key]?.names || []), v.cultivar, byKey[v.species_key]?.latin].join(' ')),
+    })
+  }
+  return options.sort((a, b) => a.title.localeCompare(b.title, 'sv'))
+}
+
 function publicUrl(path) {
   return supabase.storage.from('seed-images').getPublicUrl(path).data.publicUrl
 }
@@ -18,37 +41,43 @@ export default function SeedImages({ onBack }) {
   const [options, setOptions] = useState([])
   const [images, setImages] = useState([])
   const [key, setKey] = useState('')
+  const [query, setQuery] = useState('')
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
 
   async function load() {
-    const [facts, varieties, imgs] = await Promise.all([
-      supabase.from('plant_facts').select('key, swedish_name').order('key'),
-      supabase.from('plant_varieties').select('key, swedish_name').order('key'),
+    const [facts, varieties, names, imgs] = await Promise.all([
+      supabase.from('plant_facts').select('key, species, swedish_name'),
+      supabase.from('plant_varieties').select('key, species_key, cultivar'),
+      supabase.from('plant_names').select('name, key'),
       supabase.from('seed_images').select('key, small_path, updated_at').order('updated_at', { ascending: false }),
     ])
-    setOptions([...(varieties.data || []), ...(facts.data || [])])
+    setOptions(buildOptions(facts.data || [], varieties.data || [], names.data || []))
     setImages(imgs.data || [])
   }
   useEffect(() => { load() }, [])
 
   const hasImage = useMemo(() => new Set(images.map(i => i.key)), [images])
-  const known = options.some(o => o.key === key.trim().toLowerCase())
+  const chosen = options.find(o => o.key === key)
+  const known = Boolean(chosen)
+  const words = fold(query).split(/\s+/).filter(Boolean)
+  const matches = !words.length || chosen ? [] : options.filter(o => words.every(w => o.search.includes(w))).slice(0, 8)
+  const titleOf = k => options.find(o => o.key === k)?.title || k
 
   async function upload(e) {
     e.preventDefault()
-    if (!file || !key.trim()) return
+    if (!file || !key) return
     setError(''); setResult(null)
     try {
       setBusy('Laddar upp originalet …')
-      const target = await callAi('/api/seed-image', { action: 'upload-url', key: key.trim(), ext: EXT[file.type] })
+      const target = await callAi('/api/seed-image', { action: 'upload-url', key, ext: EXT[file.type] })
       const { error: upErr } = await supabase.storage.from('seed-image-originals').uploadToSignedUrl(target.path, target.token, file, { contentType: file.type })
       if (upErr) throw upErr
       setBusy('Beskär och gör om bilden …')
-      setResult(await callAi('/api/seed-image', { action: 'publish', key: key.trim(), originalPath: target.path }))
-      setFile(null)
+      setResult(await callAi('/api/seed-image', { action: 'publish', key, originalPath: target.path }))
+      setFile(null); setKey(''); setQuery('')
       await load()
     } catch (err) {
       setError(err?.message || 'Det gick inte att ladda upp bilden.')
@@ -69,13 +98,22 @@ export default function SeedImages({ onBack }) {
       <form className="card" onSubmit={upload} style={{ display: 'grid', gap: '14px' }}>
         <div className="field">
           <label className="field-label" htmlFor="image-key">Art eller sort</label>
-          <input id="image-key" className="field-input" list="image-keys" value={key} onChange={e => setKey(e.target.value)} placeholder="lathyrus odoratus|cupani" autoComplete="off" />
-          <datalist id="image-keys">
-            {options.map(o => <option key={o.key} value={o.key}>{o.swedish_name || ''}{hasImage.has(o.key) ? ' (har bild)' : ''}</option>)}
-          </datalist>
-          <p className="field-hint">
-            {key && !known ? 'Hittar ingen art eller sort med den nyckeln.' : 'Sort: art|sort. Art: bara det latinska namnet.'}
-            {known && hasImage.has(key.trim().toLowerCase()) ? ' Har redan en bild, den nya ersätter den.' : ''}
+          <input id="image-key" className="field-input" value={query} autoComplete="off" placeholder="Sök på svenskt namn eller sort, t.ex. luktärt"
+            onChange={e => { setQuery(e.target.value); setKey('') }} aria-describedby="image-key-hint" />
+          {matches.length > 0 && (
+            <div role="listbox" aria-label="Förslag" style={{ display: 'grid', gap: '4px' }}>
+              {matches.map(o => (
+                <button key={o.key} type="button" role="option" aria-selected="false" className="card card--compact"
+                  onClick={() => { setKey(o.key); setQuery(o.title) }} style={{ textAlign: 'left', display: 'grid', gap: '2px' }}>
+                  <span className="t-body">{o.title}{hasImage.has(o.key) ? ' · har bild' : ''}</span>
+                  <span className="t-caption t-latin" style={{ color: 'var(--text-muted)' }}>{o.sub}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <p id="image-key-hint" className="field-hint">
+            {chosen ? <>Vald: {chosen.title} <span className="t-latin">({chosen.sub})</span>.{hasImage.has(chosen.key) ? ' Har redan en bild, den nya ersätter den.' : ''}</>
+              : query && !matches.length ? 'Hittar ingen art eller sort. Arten behöver finnas i någons fröarkiv först.' : 'Välj en sort, eller arten om bilden ska gälla alla sorter.'}
           </p>
         </div>
         <div className="field">
@@ -93,7 +131,7 @@ export default function SeedImages({ onBack }) {
           <SectionLabel style={{ margin: 0 }}>Uppladdad</SectionLabel>
           <img src={result.large} alt={`Plansch för ${result.key}`} style={{ width: '100%', borderRadius: 'var(--radius-sm)' }} />
           <p className="t-caption" style={{ color: 'var(--text-muted)', margin: 0 }}>
-            {result.key} · {Math.round(result.bytes.small / 1024)} kB och {Math.round(result.bytes.large / 1024)} kB
+            {titleOf(result.key)} · {Math.round(result.bytes.small / 1024)} kB och {Math.round(result.bytes.large / 1024)} kB
             {result.trimmed ? '' : ' · Kanten kunde inte beskäras automatiskt'}
           </p>
           <AiNote>Bilden är gjord med AI (ChatGPT, i Haeckels manér).</AiNote>
@@ -107,7 +145,7 @@ export default function SeedImages({ onBack }) {
             {images.map(img => (
               <figure key={img.key} style={{ margin: 0, display: 'grid', gap: '4px' }}>
                 <img src={publicUrl(img.small_path)} alt="" loading="lazy" style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
-                <figcaption className="t-caption" style={{ color: 'var(--text-muted)', overflowWrap: 'anywhere' }}>{img.key}</figcaption>
+                <figcaption className="t-caption" style={{ color: 'var(--text-muted)', overflowWrap: 'anywhere' }}>{titleOf(img.key)}</figcaption>
               </figure>
             ))}
           </div>

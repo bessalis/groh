@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 import { readZone, saveZone, ROMAN } from '../lib/zone'
 import ZonePicker from '../components/ZonePicker'
 
-export default function Profile({ onLogout, onOpenSeedImages }) {
+export default function Profile({ onLogout, onOpenSeedImages, onOpenAi }) {
   const [user, setUser] = useState(null)
   const [seedCount, setSeedCount] = useState(0)
   const [savingZone, setSavingZone] = useState(false)
@@ -86,6 +86,12 @@ export default function Profile({ onLogout, onOpenSeedImages }) {
             <span style={{ color: muted, fontSize: '18px' }}>›</span>
           </div>
         ))}
+        {onOpenAi && (
+          <button type="button" onClick={onOpenAi} className="card t-body" style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+            <span style={{ flex: 1, color: text }}>AI i Groh!</span>
+            <span aria-hidden="true" style={{ color: muted, fontSize: '18px' }}>›</span>
+          </button>
+        )}
         {user?.app_metadata?.role === 'admin' && onOpenSeedImages && (
           <button type="button" onClick={onOpenSeedImages} className="card t-body" style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
             <span style={{ flex: 1, color: text }}>Fröbilder (admin)</span>

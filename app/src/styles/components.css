@@ -241,3 +241,11 @@ button.card, a.card {
   padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
 }
 .photo-viewer img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ── Samtyckesfråga (dialog) ─────────────────────────────────────────────── */
+.consent-dialog {
+  width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  border: 0.5px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--surface-raised); color: var(--text); padding: 20px;
+}
+.consent-dialog::backdrop { background: color-mix(in srgb, var(--bg) 70%, transparent); }

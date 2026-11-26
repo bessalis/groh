@@ -83,6 +83,7 @@ export default function SeedImages({ onBack }) {
   const [newPlant, setNewPlant] = useState('')
   const [newCultivar, setNewCultivar] = useState('')
   const [showAll, setShowAll] = useState(false)
+  const [redo, setRedo] = useState('')
 
   async function load() {
     const [facts, varieties, names, imgs] = await Promise.all([
@@ -174,6 +175,18 @@ export default function SeedImages({ onBack }) {
     await load()
     setRows(r => r.map(row => (found[row.id] ? { ...row, key: found[row.id] } : row)))
     setBusy('')
+  }
+
+  // Gör om alla bilder från de sparade originalen, t.ex. efter ändrad beskärning.
+  async function reprocessAll() {
+    setError('')
+    let failed = 0
+    for (const [i, img] of images.entries()) {
+      setRedo(`Gör om ${i + 1} av ${images.length} …`)
+      try { await callAi('/api/seed-image', { action: 'reprocess', key: img.key }) } catch { failed++ }
+    }
+    setRedo(failed ? `Klart, men ${failed} gick inte att göra om.` : 'Klart.')
+    await load()
   }
 
   function clearDone() {
@@ -344,6 +357,10 @@ export default function SeedImages({ onBack }) {
       {images.length > 0 && (
         <div className="card" style={{ display: 'grid', gap: '10px' }}>
           <SectionLabel style={{ margin: 0 }}>Har bild ({images.length})</SectionLabel>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button onClick={reprocessAll} disabled={Boolean(redo && redo.endsWith('…')) || Boolean(busy)}>Gör om alla från originalen</Button>
+            {redo && <span role="status" className="t-caption" style={{ color: 'var(--text-muted)' }}>{redo}</span>}
+          </div>
           <div className="packet-photos" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {images.map(img => (
               <figure key={img.key} style={{ margin: 0, display: 'grid', gap: '4px' }}>

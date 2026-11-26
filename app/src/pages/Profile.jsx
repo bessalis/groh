@@ -107,7 +107,6 @@ export default function Profile({ onLogout, onOpenSeedImages, onOpenAi }) {
           Logga ut
         </button>
         <div style={{ marginTop: '24px' }}><DeleteAccount /></div>
-        <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '8px' }}>Groh! · Version 1.0.0</p>
         <p className="t-caption" style={{ textAlign: 'center', color: 'var(--text-subtle)', marginTop: '16px' }}>
           <a href="/integritet/" style={{ color: 'inherit' }}>Integritetspolicy</a> · <a href="/support/" style={{ color: 'inherit' }}>Support</a>
         </p>

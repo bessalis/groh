@@ -6,7 +6,7 @@ import IconMature from '../assets/mature.svg?react'
 import IconWater from '../assets/water.svg?react'
 import IconSun from '../assets/sun.svg?react'
 import IconTemp from '../assets/temperature.svg?react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, SectionLabel, AiNote } from '../components/ui'
 import SeedImage from '../components/SeedImage'
 import { loadImageIndex, imageFor } from '../lib/seedImages'
@@ -14,6 +14,9 @@ import { supabase } from '../lib/supabase'
 import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
 import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
 import SeasonCard from '../components/SeasonCard'
+import JourneyCard from '../components/JourneyCard'
+import { loadJourneys } from '../lib/journeys'
+import '../styles/containers.css'
 
 const NEXT_STEP = {
   seed: 'Håll jorden fuktig och varm. Grodden brukar visa sig inom 1-3 veckor.',
@@ -62,6 +65,16 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
   const [isFavorite, setIsFavorite] = useState(seed.is_favorite || false)
   const [plant, setPlant] = useState({ variety: null, facts: null, loading: true })
   const [image, setImage] = useState(undefined)   // undefined = hämtas, null = ingen bild
+  const [journeys, setJourneys] = useState(null)   // null = hämtas
+  const highlightRef = useRef(null)
+
+  // Fröets gro-resor (samma sådatum = samma resa). Har fröet inga resor visas OG-faserna som förut.
+  const reloadJourneys = useCallback(() => loadJourneys(seed).then(setJourneys).catch(() => setJourneys([])), [seed])
+  useEffect(() => { reloadJourneys() }, [reloadJourneys])
+  // Öppnat från ett kärl: visa rätt resa.
+  useEffect(() => {
+    if (journeys?.length && seed._journey) highlightRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [journeys, seed._journey])
 
   // Fröbilden: sortens plansch, annars artens. Ny koppling (variety_key) kan ge en sortbild.
   useEffect(() => {
@@ -152,6 +165,17 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
           </div>
         )}
 
+        {journeys?.length > 0 && (
+          <div style={{ marginBottom: '12px' }}>
+            <SectionLabel style={{ margin: '0 0 8px' }}>{journeys.length > 1 ? 'Gro-resor' : 'Gro-resan'}</SectionLabel>
+            {journeys.map(j => (
+              <JourneyCard key={j.key} journey={j} highlight={seed._journey === j.key}
+                ref={seed._journey === j.key ? highlightRef : undefined} onChanged={reloadJourneys} />
+            ))}
+          </div>
+        )}
+
+        {journeys?.length === 0 && (<>
         {seed.sown_date && (
           <div style={{ background: 'var(--accent-soft)', border: '0.5px solid ' + 'var(--accent-border)', borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
             <span style={{ fontSize: '18px' }}>🌱</span>
@@ -191,6 +215,7 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
             Tryck på en fas för att uppdatera
           </p>
         </div>
+        </>)}
 
         {care && <div className="card" style={{ marginBottom: '12px' }}>
           <SectionLabel style={{ margin: '0 0 12px' }}>Skötselinstruktioner</SectionLabel>

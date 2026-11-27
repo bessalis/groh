@@ -31,6 +31,7 @@ export const STEP_LABELS = {
   thin: 'Gallra',
   plant_bulb: 'Sätt',
   sprout: 'Spirar',
+  mature: 'Blommar eller skördas',   // inget planerat datum, sätts från fröets sida
 }
 
 export const TEMPLATES = {

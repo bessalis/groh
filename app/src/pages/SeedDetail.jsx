@@ -15,6 +15,7 @@ import { loadPlantData, needsLink, linkSeed } from '../lib/plantData'
 import { PacketCard, SowingCard, SpeciesCard } from '../components/SeedFacts'
 import SeasonCard from '../components/SeasonCard'
 import JourneyCard from '../components/JourneyCard'
+import JourneyLog from '../components/JourneyLog'
 import { loadJourneys } from '../lib/journeys'
 import '../styles/containers.css'
 
@@ -170,7 +171,9 @@ export default function SeedDetail({ seed, onBack, onEdit }) {
             <SectionLabel style={{ margin: '0 0 8px' }}>{journeys.length > 1 ? 'Gro-resor' : 'Gro-resan'}</SectionLabel>
             {journeys.map(j => (
               <JourneyCard key={j.key} journey={j} highlight={seed._journey === j.key}
-                ref={seed._journey === j.key ? highlightRef : undefined} onChanged={reloadJourneys} />
+                ref={seed._journey === j.key ? highlightRef : undefined} onChanged={reloadJourneys}>
+                <JourneyLog journey={j} onChanged={reloadJourneys} />
+              </JourneyCard>
             ))}
           </div>
         )}

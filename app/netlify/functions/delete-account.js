@@ -2,7 +2,7 @@ import { requireUser, readJson, json } from '../lib/auth.js'
 import { dbAvailable, rest, listObjects, removeObjects, deleteAuthUser } from '../lib/db.js'
 
 // Raderar den inloggade användarens konto och all egen data.
-//   1. påsfotona i seed-packets (en mapp per användare)
+//   1. påsfotona och loggfotona i seed-packets (en mapp per användare)
 //   2. odlingsloggar, skördar, plantor, fröer och platser (tabellerna utan
 //      "on delete cascade" mot användaren, i rätt ordning)
 //   3. själva kontot; skanningar, höstbokslut och AI-räknaren följer med (cascade)

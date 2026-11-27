@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Button, AiNote } from '../components/ui'
 import SeedImage from '../components/SeedImage'
+import ContainerCards from '../components/ContainerCards'
 import { loadImageIndex, imageFor } from '../lib/seedImages'
 
 export default function SeedArchive({ onSelect, onAdd }) {
@@ -136,6 +137,11 @@ export default function SeedArchive({ onSelect, onAdd }) {
       <div style={{ padding: '24px 16px 16px' }}>
         <h1 style={{ fontSize: 'var(--display-l)', fontFamily: 'var(--font-display)', fontWeight: 400, fontStyle: 'normal', letterSpacing: '0.01em', color: text, margin: '0 0 4px' }}>Fröarkivet</h1>
         <p style={{ fontSize: '13px', color: muted, margin: '0 0 16px' }}>{compost ? `${seeds.length} i komposten` : `${seeds.length} frön i din samling`}</p>
+        {!compost && (
+          <div style={{ marginBottom: '20px' }}>
+            <ContainerCards onOpenSeed={onSelect} />
+          </div>
+        )}
         <div role="tablist" aria-label="Visa" style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
           {[[false, 'Fröer'], [true, 'Komposten']].map(([value, label]) => (
             <button key={label} type="button" role="tab" aria-selected={compost === value} onClick={() => switchTab(value)} className="t-small"

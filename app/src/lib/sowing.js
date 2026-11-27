@@ -11,7 +11,7 @@ import { buildTimeline, lastFrost, suggestStart, suggestTemplate, isoDate, TEMPL
 const VARIETY_COLUMNS = 'key, sow_indoor_months, sow_outdoor_months, days_to_germination_min, days_to_germination_max, sowing_depth_cm, light_germination'
 
 // Fröets fas följer tidslinjen, så att startsidan och kalendern stämmer.
-const PHASE_AFTER = { sow: 'seed', plant_bulb: 'seed', germinate: 'seedling', sprout: 'seedling', pot_up: 'seedling', harden_off: 'seedling', thin: 'growing', plant_out: 'growing' }
+const PHASE_AFTER = { sow: 'seed', plant_bulb: 'seed', germinate: 'seedling', sprout: 'seedling', pot_up: 'seedling', harden_off: 'seedling', thin: 'growing', plant_out: 'growing', mature: 'mature' }
 
 // Från september planerar man nästa år (samma brytpunkt som höstbokslutet).
 export const currentSeason = (date = new Date()) => date.getFullYear() + (date.getMonth() >= 8 ? 1 : 0)

@@ -86,7 +86,7 @@ export default function AiInfo({ onBack }) {
           AI-modellen är Claude Haiku från Anthropic. Anthropic tränar inte sina modeller på det Groh! skickar och raderar det normalt inom 30 dagar.
         </p>
         <p className="t-small" style={{ margin: 0 }}>
-          Dina fröer, anteckningar och foton sparas i Groh!:s databas hos Supabase i Stockholm. Bara du kan se dina foton.
+          Dina fröer, anteckningar och foton sparas i Groh!:s databas hos Supabase i Stockholm. Bara du kan se dina foton. Foton i odlingsloggen skickas aldrig till AI.
         </p>
       </section>
 

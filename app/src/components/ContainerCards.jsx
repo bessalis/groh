@@ -10,7 +10,7 @@ import MarkDot from './MarkDot'
 import SeedImage from './SeedImage'
 import { Icon } from './Icon'
 import { isoDate } from '../lib/timeline'
-import { markDone, undoDone } from '../lib/sowing'
+import { journeyKey, phaseOf, sameJourney, setJourneyPhase, setJourneyStep, PHASES } from '../lib/journeys'
 import { loadImageIndex, imageFor } from '../lib/seedImages'
 import { containerLabel, loadActiveSowings, waitingText, dayOf, inContainer, hasGerminated, slotCount } from '../lib/containers'
 import '../styles/containers.css'
@@ -30,7 +30,7 @@ function cellsFor(sowing) {
   return cells.concat(plants.filter(p => !placed.has(p)).map(p => ({ key: p.id, plant: p })))
 }
 
-function ContainerCard({ sowing, todayIso, imageIndex, onOpenSeed, onSaved }) {
+function ContainerCard({ sowing, allPlants, todayIso, imageIndex, onOpenSeed, onSaved }) {
   const [open, setOpen] = useState(null)   // plantans id
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -43,8 +43,10 @@ function ContainerCard({ sowing, todayIso, imageIndex, onOpenSeed, onSaved }) {
   async function toggle(plant) {
     setBusy(true); setError('')
     try {
-      if (hasGerminated(plant)) await undoDone(plant, 'germinate')
-      else await markDone(plant, 'germinate', todayIso)
+      // Hela resan: samma frö sått samma dag, också i andra kärl.
+      const journey = sameJourney(allPlants, plant)
+      if (hasGerminated(plant)) await setJourneyPhase({ plants: journey, seedId: plant.seed_id }, 'seed', todayIso)
+      else await setJourneyStep(journey, 'germinate', true, todayIso)
       await onSaved()
     } catch { setError('Det gick inte att spara.') }
     setBusy(false)
@@ -69,14 +71,15 @@ function ContainerCard({ sowing, todayIso, imageIndex, onOpenSeed, onSaved }) {
             return <div key={c.key} role="listitem" className="tray__cell tray__cell--empty"><span className="tray__no">{c.slot}</span></div>
           }
           const g = hasGerminated(c.plant)
-          const label = `${c.slot ? `Plats ${c.slot}: ` : ''}${c.plant.seed.name}, ${g ? 'har grott' : 'väntar'}`
+          const phase = PHASES.find(x => x.id === phaseOf([c.plant]))
+          const label = `${c.slot ? `Plats ${c.slot}: ` : ''}${c.plant.seed.name}, ${g ? phase?.label.toLowerCase() || 'har grott' : 'väntar'}`
           return (
             <div key={c.key} role="listitem">
               <button type="button" className={`tray__cell${g ? ' tray__cell--grown' : ''}`} aria-pressed={open === c.plant.id} aria-label={label}
                 onClick={() => setOpen(open === c.plant.id ? null : c.plant.id)}>
                 <SeedImage image={imageIndex && imageFor(c.plant.seed, imageIndex)} name="" className="tray__image" />
                 {c.slot && <span className="tray__no">{c.slot}</span>}
-                {g && <span className="tray__sprout"><Icon name="seedling" size={14} color="currentColor" /></span>}
+                {g && <span className="tray__sprout"><Icon name={phase?.icon || 'seedling'} size={14} color="currentColor" /></span>}
               </button>
             </div>
           )
@@ -98,7 +101,7 @@ function ContainerCard({ sowing, todayIso, imageIndex, onOpenSeed, onSaved }) {
                 {busy ? 'Sparar …' : hasGerminated(selected) ? 'Ångra grott' : 'Har grott'}
               </Button>
             )}
-            <Button variant="link" onClick={() => onOpenSeed?.(selected.seed)}>Öppna fröet</Button>
+            <Button variant="link" onClick={() => onOpenSeed?.({ ...selected.seed, _journey: journeyKey(selected) })}>Fröets sida</Button>
           </div>
           {error && <p role="alert" className="t-small" style={{ color: 'var(--danger-text)', margin: 0, gridColumn: '1 / -1' }}>{error}</p>}
         </div>
@@ -127,6 +130,7 @@ export default function ContainerCards({ onOpenSeed, onChange, reloadKey }) {
   }
 
   if (!sowings.length) return null
+  const allPlants = sowings.flatMap(s => s.plants)
   const anyImage = imageIndex && sowings.some(s => s.plants.some(p => imageFor(p.seed, imageIndex)))
 
   return (
@@ -134,7 +138,7 @@ export default function ContainerCards({ onOpenSeed, onChange, reloadKey }) {
       <SectionLabel style={{ margin: 0 }}>I kärlen</SectionLabel>
       <p className="t-caption" style={{ margin: 0, color: 'var(--text-muted)' }}>Tryck på en ruta när något tittar fram.</p>
       {sowings.map(s => (
-        <ContainerCard key={s.id} sowing={s} todayIso={todayIso} imageIndex={imageIndex} onOpenSeed={onOpenSeed} onSaved={saved} />
+        <ContainerCard key={s.id} sowing={s} allPlants={allPlants} todayIso={todayIso} imageIndex={imageIndex} onOpenSeed={onOpenSeed} onSaved={saved} />
       ))}
       {anyImage && <AiNote>Illustrationerna är gjorda med AI, i Ernst Haeckels manér.</AiNote>}
     </section>

@@ -3,11 +3,14 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Button, SectionLabel } from '../components/ui'
+import { Button, SectionLabel, AiNote } from '../components/ui'
 import { ROMAN } from '../lib/zone'
-import { lastFrost, isoDate, TEMPLATES } from '../lib/timeline'
+import { lastFrost, isoDate, TEMPLATES, STEP_LABELS } from '../lib/timeline'
 import { currentSeason, frostSettings, loadSeason, timelineFor, nextStep, markDone, suggestionFor, addToSeason } from '../lib/sowing'
 import ContainerCards from '../components/ContainerCards'
+import SeedImage from '../components/SeedImage'
+import { loadImageIndex, imageFor } from '../lib/seedImages'
+import '../styles/containers.css'
 
 const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
 const dayText = iso => new Date(`${iso}T12:00:00Z`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })
@@ -29,6 +32,8 @@ export default function SowingPlan({ onOpenSeed, onSowingDay }) {
   const [frost, setFrost] = useState(null)
   const [plants, setPlants] = useState(null)
   const [tick, setTick] = useState(0)
+  const [imageIndex, setImageIndex] = useState(null)
+  useEffect(() => { loadImageIndex().then(setImageIndex).catch(() => {}) }, [])
   const [candidates, setCandidates] = useState([])
   const [picked, setPicked] = useState(new Set())
   const [busy, setBusy] = useState('')
@@ -83,26 +88,24 @@ export default function SowingPlan({ onOpenSeed, onSowingDay }) {
   })
   // Groningen följs per kärl (I kärlen), så den visas inte en gång till här.
   const active = rows.filter(r => r.next && !(r.plant.sowing_id && r.next.step === 'germinate')).sort((a, b) => a.next.date.localeCompare(b.next.date))
-  const soonLimit = isoDate(new Date(Date.now() + SOON_DAYS * 86400000))
-  const now = active.filter(r => r.next.date <= soonLimit)
-  const later = active.filter(r => r.next.date > soonLimit)
+  // I dag: det som ska göras i dag eller redan borde ha gjorts. Bara här finns knappen Gjort.
+  const now = active.filter(r => r.next.date <= todayIso)
+  const later = active.filter(r => r.next.date > todayIso)
+  // Såkalendern: per månad, och inom månaden samma datum och steg samlade.
   const byMonth = later.reduce((acc, r) => {
     const m = Number(r.next.date.slice(5, 7)) - 1
-    ;(acc[m] ||= []).push(r)
+    const month = (acc[m] ||= {})
+    const key = `${r.next.date}|${r.next.step}`
+    ;(month[key] ||= { date: r.next.date, step: r.next.step, rows: [] }).rows.push(r)
     return acc
   }, {})
   const finished = rows.filter(r => !r.next)
   const frostDate = lastFrost(season, frost)
 
-  const Row = ({ r, showButton }) => (
-    <li style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '8px', alignItems: 'center' }}>
-      <button type="button" onClick={() => onOpenSeed?.(r.plant.seed)} style={{ all: 'unset', cursor: 'pointer', minWidth: 0 }}>
-        <span className="t-body" style={{ display: 'block' }}>{r.plant.seed.name}</span>
-        <span className="t-caption" style={{ color: 'var(--text-muted)' }}>{r.next.label} {whenText(r.next.date, todayIso)}</span>
-      </button>
-      {showButton && <Button onClick={() => done(r.plant, r.next.step)} disabled={Boolean(busy)}>{busy === r.plant.id ? 'Sparar …' : 'Gjort'}</Button>}
-    </li>
+  const Thumb = ({ seed }) => (
+    <SeedImage image={imageIndex && imageFor(seed, imageIndex)} name="" className="seed-row__image" />
   )
+  const anyImage = imageIndex && rows.some(r => imageFor(r.plant.seed, imageIndex))
 
   return (
     <div style={{ maxWidth: '390px', margin: '0 auto', padding: '24px 16px calc(100px + env(safe-area-inset-bottom))', display: 'grid', gap: '16px' }}>
@@ -125,21 +128,50 @@ export default function SowingPlan({ onOpenSeed, onSowingDay }) {
 
       {now.length > 0 && (
         <section className="card card--soft" style={{ display: 'grid', gap: '10px' }}>
-          <SectionLabel style={{ margin: 0 }}>Att göra nu</SectionLabel>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '12px' }}>
-            {now.map(r => <Row key={r.plant.id} r={r} showButton />)}
+          <SectionLabel style={{ margin: 0 }}>I dag</SectionLabel>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '10px' }}>
+            {now.map(r => (
+              <li key={r.plant.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '8px', alignItems: 'center' }}>
+                <button type="button" className="seed-row" onClick={() => onOpenSeed?.(r.plant.seed)}>
+                  <Thumb seed={r.plant.seed} />
+                  <span style={{ minWidth: 0 }}>
+                    <span className="t-body" style={{ display: 'block' }}>{r.plant.seed.name}</span>
+                    <span className="t-caption" style={{ color: 'var(--text-muted)' }}>{r.next.label} {whenText(r.next.date, todayIso)}</span>
+                  </span>
+                </button>
+                <Button onClick={() => done(r.plant, r.next.step)} disabled={Boolean(busy)}>{busy === r.plant.id ? 'Sparar …' : 'Gjort'}</Button>
+              </li>
+            ))}
           </ul>
         </section>
       )}
 
-      {Object.entries(byMonth).map(([m, list]) => (
-        <section key={m} className="card" style={{ display: 'grid', gap: '10px' }}>
-          <SectionLabel style={{ margin: 0 }}>{MONTHS[m]}</SectionLabel>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '12px' }}>
-            {list.map(r => <Row key={r.plant.id} r={r} />)}
-          </ul>
+      {Object.keys(byMonth).length > 0 && (
+        <section style={{ display: 'grid', gap: '10px' }}>
+          <div>
+            <h2 className="t-heading" style={{ margin: 0 }}>Såkalender</h2>
+            <p className="t-small" style={{ margin: 0, color: 'var(--text-muted)' }}>Det som väntar framåt, samma dag samlat.</p>
+          </div>
+          {Object.entries(byMonth).map(([m, groups]) => (
+            <section key={m} className="card" style={{ display: 'grid', gap: '12px' }}>
+              <SectionLabel as="h3" style={{ margin: 0 }}>{MONTHS[m]}</SectionLabel>
+              {Object.values(groups).map(g => (
+                <div key={`${g.date}${g.step}`} className="date-group">
+                  <span className="date-group__head">{STEP_LABELS[g.step]} {dayText(g.date)}</span>
+                  {g.rows.map(r => (
+                    <button key={r.plant.id} type="button" className="seed-row" onClick={() => onOpenSeed?.(r.plant.seed)}>
+                      <Thumb seed={r.plant.seed} />
+                      <span className="t-body" style={{ minWidth: 0 }}>{r.plant.seed.name}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </section>
+          ))}
         </section>
-      ))}
+      )}
+
+      {anyImage && <AiNote>Illustrationerna är gjorda med AI, i Ernst Haeckels manér.</AiNote>}
 
       {finished.length > 0 && (
         <p className="t-small" style={{ color: 'var(--text-muted)', margin: 0 }}>

@@ -3,14 +3,30 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Button, SectionLabel } from '../components/ui'
+import { Button, SectionLabel, AiNote } from '../components/ui'
 import MarkDot from '../components/MarkDot'
+import SeedImage from '../components/SeedImage'
+import { loadImageIndex, imageFor } from '../lib/seedImages'
 import { isoDate } from '../lib/timeline'
 import { currentSeason, frostSettings, suggestionFor } from '../lib/sowing'
 import {
   COLORS, KINDS, DEFAULT_TRAY_SLOTS, containerLabel, slotCount, listContainers, createContainer,
   loadActiveSowings, occupiedSlots, saveSowing,
 } from '../lib/containers'
+
+const VIEW_KEY = 'groh-sowing-view'
+const readView = () => { try { return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'cards' } catch { return 'cards' } }
+
+// Det som skiljer två påsar av samma frö åt: sort (om den inte redan står i namnet), fröfirma och årgång.
+function seedDetail(seed) {
+  const cultivar = seed.cultivar?.trim()
+  const parts = [
+    cultivar && !seed.name.toLowerCase().includes(cultivar.toLowerCase()) ? cultivar : null,
+    seed.supplier?.trim() || null,
+    seed.packed_for_season ? String(seed.packed_for_season) : null,
+  ]
+  return parts.filter(Boolean).join(' · ')
+}
 
 const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
 
@@ -89,6 +105,11 @@ export default function SowingDay({ onDone, onBack }) {
   const [lastSeed, setLastSeed] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [view, setView] = useState(readView)
+  const [imageIndex, setImageIndex] = useState(null)
+
+  useEffect(() => { loadImageIndex().then(setImageIndex).catch(() => {}) }, [])
+  function changeView(v) { setView(v); try { localStorage.setItem(VIEW_KEY, v) } catch { /* inte sparat */ } }
 
   useEffect(() => {
     let live = true
@@ -199,6 +220,7 @@ export default function SowingDay({ onDone, onBack }) {
 
   // ── Steg 2: fyll platserna ───────────────────────────────────────────────
   const chosenIds = new Set(container.kind === 'bed' ? bedSeeds.map(s => s.id) : [])
+  const isPicked = seed => (container.kind === 'bed' ? chosenIds.has(seed.id) : assigned[selected]?.id === seed.id)
   const filled = container.kind === 'bed' ? bedSeeds.length : Object.keys(assigned).length
   return (
     <div style={page}>
@@ -249,17 +271,45 @@ export default function SowingDay({ onDone, onBack }) {
               {assigned[selected] && <Button variant="ghost" onClick={() => clearSlot(selected)}>Töm platsen</Button>}
             </div>
           )}
+          {seeds.length > 0 && (
+            <div className="view-toggle" role="radiogroup" aria-label="Visa fröerna som">
+              {[['cards', 'Kort'], ['list', 'Lista']].map(([key, label]) => (
+                <button key={key} type="button" role="radio" aria-checked={view === key} onClick={() => changeView(key)}>{label}</button>
+              ))}
+            </div>
+          )}
           {byMonth.map(g => (
             <div key={g.month} style={{ display: 'grid', gap: '6px' }}>
-              <span className="t-caption" style={{ color: 'var(--text-muted)' }}>{MONTHS[g.month]}</span>
-              <div className="chips">
-                {g.seeds.map(seed => (
-                  <button key={seed.id} type="button" className="chip" aria-pressed={container.kind === 'bed' ? chosenIds.has(seed.id) : assigned[selected]?.id === seed.id}
-                    onClick={() => pick(seed)}>{seed.name}</button>
-                ))}
-              </div>
+              <span className="t-caption" style={{ color: 'var(--text-muted)' }}>Sås i {MONTHS[g.month]}</span>
+              {view === 'list' ? (
+                <div className="chips">
+                  {g.seeds.map(seed => {
+                    const detail = seedDetail(seed)
+                    return (
+                      <button key={seed.id} type="button" className="chip" aria-pressed={isPicked(seed)}
+                        onClick={() => pick(seed)}>{seed.name}{detail ? ` (${detail})` : ''}</button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="pick-grid">
+                  {g.seeds.map(seed => {
+                    const detail = seedDetail(seed)
+                    return (
+                      <button key={seed.id} type="button" className="pick-card" aria-pressed={isPicked(seed)} onClick={() => pick(seed)}>
+                        <SeedImage image={imageIndex && imageFor(seed, imageIndex)} name={seed.name} className="pick-card__image" />
+                        <span className="pick-card__name">{seed.name}</span>
+                        {detail && <span className="pick-card__detail">{detail}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           ))}
+          {imageIndex && view === 'cards' && seeds.some(seed => imageFor(seed, imageIndex)) && (
+            <AiNote>Illustrationerna är gjorda med AI, i Ernst Haeckels manér.</AiNote>
+          )}
           {!seeds.length && <p className="t-small" style={{ margin: 0 }}>Du har inga fröer än. Lägg till fröer under Fröer först.</p>}
         </section>
       )}

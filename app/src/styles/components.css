@@ -308,3 +308,24 @@ button.card, a.card {
 .slot--taken { border-style: solid; background: var(--surface-muted); color: var(--text-muted); cursor: default; }
 .slot[aria-pressed="true"] { outline: 2px solid var(--text-accent); outline-offset: 1px; }
 .slot:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }
+
+/* ── Välj frö på Sådag: kort med bild eller lista ─────────────────────────── */
+.view-toggle { display: inline-flex; justify-self: start; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface-muted); border: 0.5px solid var(--border-color); }
+.view-toggle button {
+  min-height: 40px; min-width: 72px; padding: 6px 14px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--text); font-family: var(--font-body); font-size: var(--text-caption); cursor: pointer;
+}
+.view-toggle button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.view-toggle button:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }
+
+.pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.pick-card {
+  display: grid; align-content: start; gap: 2px; padding: 8px 8px 10px; text-align: left;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface);
+  color: var(--text); font-family: var(--font-body); cursor: pointer; min-width: 0;
+}
+.pick-card__image { aspect-ratio: 3 / 4; width: 100%; border-radius: calc(var(--radius-sm) - 2px); margin-bottom: 6px; }
+.pick-card__name { font-size: var(--text-body); font-weight: 700; overflow-wrap: anywhere; }
+.pick-card__detail { font-size: var(--text-caption); color: var(--text-muted); overflow-wrap: anywhere; }
+.pick-card[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-selected); outline: 2px solid var(--text-accent); outline-offset: 1px; }
+.pick-card:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }
